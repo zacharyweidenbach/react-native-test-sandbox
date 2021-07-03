@@ -1,13 +1,23 @@
 import express from "express";
-const app = express();
-const port = 8080; // default port to listen
+import { data } from "./data";
+export const app = express();
+export const port = 8080; // default port to listen
 
 // define a route handler for the default home page
 app.get("/", (req: any, res: any) => {
   res.send("Hello world!");
 });
 
+app.get("/items", async (req, res) => {
+  return res.send(data);
+});
+
+app.get("/items/:id", (req: any, res: any) => {
+  const item = data.find(({ id }) => req.query.id === id);
+  return res.send(item);
+});
+
 // start the Express server
-app.listen(port, () => {
+export const server = app.listen(port, () => {
   console.log(`server started at http://localhost:${port}`);
 });
