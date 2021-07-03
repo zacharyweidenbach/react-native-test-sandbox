@@ -1,7 +1,7 @@
 import express from "express";
 import { data } from "./data";
 export const app = express();
-export const port = 8080; // default port to listen
+export const port = 9000; // default port to listen
 
 // define a route handler for the default home page
 app.get("/", (req: any, res: any) => {
