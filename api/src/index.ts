@@ -12,8 +12,8 @@ app.get("/items", async (req, res) => {
   return res.send(data);
 });
 
-app.get("/items/:id", (req: any, res: any) => {
-  const item = data.find(({ id }) => req.query.id === id);
+app.get("/items/:id", (req, res) => {
+  const item = data.find(({ id }) => req.params.id === id);
   return res.send(item);
 });
 

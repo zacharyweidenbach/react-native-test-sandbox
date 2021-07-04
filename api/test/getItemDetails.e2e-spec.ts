@@ -2,7 +2,9 @@ import supertest from "supertest";
 
 import { testApp, testServer, testPort } from "./testApp";
 
-describe("/items (e2e)", () => {
+const itemId = "1c4ffda6-0e44-4176-908c-f87d6915b272";
+
+describe("/items/:id (e2e)", () => {
   beforeEach(() => {
     if (!testServer.listenerCount) testServer.listen(testPort);
   });
@@ -10,12 +12,13 @@ describe("/items (e2e)", () => {
   afterEach(() => {
     testServer.close();
   });
-  it("GET /items returns all items", async () => {
+
+  it("GET /items/:id returns an item", async () => {
     await supertest(testApp)
-      .get("/items")
+      .get(`/items/${itemId}`)
       .expect(200)
       .then((response) => {
-        expect(Array.isArray(response.body)).toBeTruthy();
+        expect(response.body.id).toEqual(itemId);
       });
   });
 });
