@@ -1,6 +1,6 @@
-import React, { FC } from 'react';
-import { View, Text, FlatList, ActivityIndicator } from 'react-native';
+import React from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import { List, ListItem, Text, Spinner } from '@ui-kitten/components';
 
 const queryClient = new QueryClient();
 
@@ -26,7 +26,7 @@ const ConventionalListScreenContents = () => {
   );
 
   if (isLoading) {
-    return <ActivityIndicator />;
+    return <Spinner />;
   }
 
   if (error) {
@@ -34,21 +34,16 @@ const ConventionalListScreenContents = () => {
   }
 
   return (
-    <FlatList
+    <List
       data={data}
-      renderItem={({ item }) => <Item item={item} />}
+      renderItem={({ item }) => (
+        <ListItem
+          title={`${item.firstName} ${item.lastName}`}
+          description={`Team Colors: ${item.teamColor}`}
+        />
+      )}
       keyExtractor={(item) => item.id}
       ListEmptyComponent={<Text>Nothing Here!</Text>}
     />
-  );
-};
-
-const Item: FC<{ item: Item }> = ({ item }) => {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>{`First Name: ${item.firstName}`}</Text>
-      <Text>{`Last Name: ${item.lastName}`}</Text>
-      <Text>{`Team Color: ${item.teamColor}`}</Text>
-    </View>
   );
 };
