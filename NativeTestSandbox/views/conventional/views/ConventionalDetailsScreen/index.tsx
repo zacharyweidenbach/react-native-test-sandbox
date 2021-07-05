@@ -1,8 +1,9 @@
 import React from 'react';
-import { useQuery } from 'react-query';
-import { Text, Spinner, Card } from '@ui-kitten/components';
+import { Text, Card } from '@ui-kitten/components';
 import { RouteProp, useRoute } from '@react-navigation/native';
 
+import { LoadingIndicator } from '../../../../components/LoadingIndicator';
+import { useFetchQuery } from '../../../../utils/useFetchQuery';
 import { ConventionalStackList, Item } from '../../types';
 
 export const ConventionalDetailsScreen = () => {
@@ -10,15 +11,16 @@ export const ConventionalDetailsScreen = () => {
     params: { id },
   } = useRoute<RouteProp<ConventionalStackList, 'ConventionalDetails'>>();
 
-  const { isLoading, error, data } = useQuery<Item>('ConventionalDetails', () =>
-    fetch(`http://localhost:9000/items/${id}`).then((res) => res.json()),
+  const { isLoading, isError, data } = useFetchQuery<Item>(
+    'ConventionalDetails',
+    `items/${id}`,
   );
 
   if (isLoading) {
-    return <Spinner />;
+    return <LoadingIndicator />;
   }
 
-  if (error) {
+  if (isError) {
     return <Text>Whoops! Something went wrong.</Text>;
   }
 

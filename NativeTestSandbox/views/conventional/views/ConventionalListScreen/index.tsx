@@ -1,21 +1,23 @@
 import React from 'react';
-import { useQuery } from 'react-query';
-import { List, ListItem, Text, Spinner } from '@ui-kitten/components';
+import { List, ListItem, Text } from '@ui-kitten/components';
 import { useNavigation } from '@react-navigation/native';
 
+import { LoadingIndicator } from '../../../../components/LoadingIndicator';
+import { useFetchQuery } from '../../../../utils/useFetchQuery';
 import { Item } from '../../types';
 
 export const ConventionalListScreen = () => {
-  const { isLoading, error, data } = useQuery<Item[]>('ConventionalList', () =>
-    fetch('http://localhost:9000/items').then((res) => res.json()),
+  const { isLoading, isError, data } = useFetchQuery<Item[]>(
+    'ConventionalList',
+    'items',
   );
   const navigation = useNavigation();
 
   if (isLoading) {
-    return <Spinner />;
+    return <LoadingIndicator />;
   }
 
-  if (error) {
+  if (isError) {
     return <Text>Whoops! Something went wrong.</Text>;
   }
 
