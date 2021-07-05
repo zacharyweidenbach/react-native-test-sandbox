@@ -1,8 +1,9 @@
 import * as React from 'react';
 import '@testing-library/jest-native/extend-expect';
-import '@testing-library/react-native';
+import { waitFor } from '@testing-library/react-native';
 
 import * as useFetchQueryModule from '../../../../utils/useFetchQuery';
+import { mockItemEndpoint, itemBuilder } from '../../../../test/mocks/item';
 
 import {
   wrappedRender,
@@ -46,25 +47,21 @@ describe('ConventionalDetailsScreen', () => {
   });
 
   it('should show data when fetched', () => {
-    const spy = jest.spyOn(useFetchQueryModule, 'useFetchQuery');
-    spy.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        id: 'id',
-        firstName: 'John',
-        lastName: 'Doe',
-        teamColor: 'blue',
-      },
-    } as any);
+    const item = itemBuilder();
+    const scope = mockItemEndpoint(item);
 
     const { getByText } = wrappedRender(
-      <MockedNavigator screen={ConventionalDetailsScreen} />,
+      <MockedNavigator
+        screen={ConventionalDetailsScreen}
+        initialParams={{ id: item.id }}
+      />,
     );
 
-    expect(getByText('Player Details')).toBeTruthy();
-    expect(getByText('First Name: John')).toBeTruthy();
-    expect(getByText('Last Name: Doe')).toBeTruthy();
-    expect(getByText('Team Color: blue')).toBeTruthy();
+    waitFor(() => expect(scope).toHaveBeenCalledTimes(1)).then(() => {
+      expect(getByText('Player Details')).toBeTruthy();
+      expect(getByText(`First Name: ${item.firstName}`)).toBeTruthy();
+      expect(getByText(`Last Name: ${item.lastName}`)).toBeTruthy();
+      expect(getByText(`Team Color: ${item.teamColor}`)).toBeTruthy();
+    });
   });
 });

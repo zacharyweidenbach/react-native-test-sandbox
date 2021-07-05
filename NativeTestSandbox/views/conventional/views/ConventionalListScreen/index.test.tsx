@@ -1,8 +1,9 @@
 import * as React from 'react';
 import '@testing-library/jest-native/extend-expect';
-import '@testing-library/react-native';
+import { waitFor } from '@testing-library/react-native';
 
 import * as useFetchQueryModule from '../../../../utils/useFetchQuery';
+import { mockItemsEndpoint, itemBuilder } from '../../../../test/mocks/item';
 
 import {
   wrappedRender,
@@ -11,10 +12,11 @@ import {
 import { ConventionalListScreen } from '.';
 
 describe('ConventionalListScreen', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     // https://github.com/facebook/jest/issues/6434
     jest.useFakeTimers();
   });
+
   it('should be loading when fetching', () => {
     const spy = jest.spyOn(useFetchQueryModule, 'useFetchQuery');
     spy.mockReturnValue({
@@ -45,26 +47,17 @@ describe('ConventionalListScreen', () => {
     expect(getByText('Whoops! Something went wrong.')).toBeTruthy();
   });
 
-  it('should show data when fetched', () => {
-    const spy = jest.spyOn(useFetchQueryModule, 'useFetchQuery');
-    spy.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: [
-        {
-          id: 'id',
-          firstName: 'John',
-          lastName: 'Doe',
-          teamColor: 'blue',
-        },
-      ],
-    } as any);
+  it('should show data when fetched', async () => {
+    const item = itemBuilder();
+    const scope = mockItemsEndpoint([item]);
 
     const { getByText } = wrappedRender(
       <MockedNavigator screen={ConventionalListScreen} />,
     );
 
-    expect(getByText('John Doe')).toBeTruthy();
-    expect(getByText('Team Colors: blue')).toBeTruthy();
+    waitFor(() => expect(scope).toHaveBeenCalledTimes(1)).then(() => {
+      expect(getByText(`${item.firstName} ${item.lastName}`)).toBeTruthy();
+      expect(getByText(`Team Colors: ${item.teamColor}`)).toBeTruthy();
+    });
   });
 });
