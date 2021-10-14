@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { List, ListItem, Text } from '@ui-kitten/components';
-import { useNavigation } from '@react-navigation/native';
 
 import { LoadingIndicator } from '../../../../components/LoadingIndicator';
-import { useFetchQuery } from '../../../../utils/useFetchQuery';
 import { Item } from '../../../../types';
 
-export const ConventionalListScreen = () => {
-  const { isLoading, isError, data } = useFetchQuery<Item[]>(
-    'ConventionalList',
-    'items',
-  );
-  const navigation = useNavigation();
+export type Props = {
+  isLoading: boolean;
+  isError: boolean;
+  data: Item[];
+  onListItemPress: (event: any) => void;
+};
 
+export const MVCListScreenView: FC<Props> = ({
+  isLoading,
+  isError,
+  data,
+  onListItemPress,
+}) => {
   if (isLoading) {
     return <LoadingIndicator />;
   }
@@ -28,9 +32,7 @@ export const ConventionalListScreen = () => {
         <ListItem
           title={`${item.firstName} ${item.lastName}`}
           description={`Team Colors: ${item.teamColor}`}
-          onPress={() =>
-            navigation.navigate('ConventionalDetails', { id: item.id })
-          }
+          onPress={onListItemPress}
         />
       )}
       keyExtractor={(item) => item.id}

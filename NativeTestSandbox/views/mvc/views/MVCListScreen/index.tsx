@@ -1,10 +1,21 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+
+import { MCVListScreenModelGetter } from './model';
+import { MVCListScreenControllerGetter } from './controller';
+import { MVCListScreenView } from './view';
+
+const model = MCVListScreenModelGetter(fetch)();
+const useController = MVCListScreenControllerGetter(model);
 
 export const MVCListScreen = () => {
+  const { isLoading, isError, data, onListItemPress } = useController();
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>MVC List</Text>
-    </View>
+    <MVCListScreenView
+      isLoading={isLoading}
+      isError={isError}
+      data={data}
+      onListItemPress={onListItemPress}
+    />
   );
 };

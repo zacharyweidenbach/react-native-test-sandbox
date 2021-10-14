@@ -4,7 +4,7 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 
 import { LoadingIndicator } from '../../../../components/LoadingIndicator';
 import { useFetchQuery } from '../../../../utils/useFetchQuery';
-import { ConventionalStackList, Item } from '../../types';
+import { ConventionalStackList, Item } from '../../../../types';
 
 export const ConventionalDetailsScreen = () => {
   const {

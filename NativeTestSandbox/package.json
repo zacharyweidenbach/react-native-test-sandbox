@@ -20,6 +20,7 @@
     "@ui-kitten/eva-icons": "^5.1.0",
     "@xstate/react": "^1.4.0",
     "eslint-plugin-prettier": "^3.4.0",
+    "events": "^3.3.0",
     "react": "17.0.1",
     "react-native": "0.64.2",
     "react-native-gesture-handler": "^1.10.3",

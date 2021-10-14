@@ -1,7 +1,7 @@
 import { build, fake } from '@jackfranklin/test-data-bot';
 import nock from 'nock';
 
-import { Item } from '../../views/conventional/types';
+import { Item } from '../../types';
 
 export const itemBuilderRaw = build<Item>({
   fields: {
@@ -20,11 +20,11 @@ export const itemBuilder = (overrides: Partial<Item> = {}) => {
 };
 
 export const mockItemsEndpoint = (items: Item[]) => {
-  return nock('https://localhost:9000').get('/items').reply(200, items);
+  return nock('http://localhost:9000').get('/items').reply(200, items);
 };
 
 export const mockItemEndpoint = (item: Item) => {
-  return nock('https://localhost:9000')
+  return nock('http://localhost:9000')
     .get(`/items/${item.id}`)
     .reply(200, item);
 };
