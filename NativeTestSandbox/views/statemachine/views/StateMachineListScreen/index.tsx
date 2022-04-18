@@ -1,15 +1,25 @@
 import React from 'react';
 import { List, ListItem, Text } from '@ui-kitten/components';
 import { useNavigation } from '@react-navigation/native';
+import { useMachine } from '@xstate/react';
 
 import { LoadingIndicator } from '../../../../components/LoadingIndicator';
-import { Item } from '../../../../types';
+import { fetchMachine } from './stateMachine';
 
 export const StateMachineListScreen = () => {
+  const [state, send] = useMachine(fetchMachine);
   const navigation = useNavigation();
-  const isLoading = false;
-  const isError = false;
-  const data = [] as Item[];
+
+  const isLoading = state.value === 'idle' || state.value === 'loading';
+  const isError = state.value === 'error';
+  const isIdle = state.value === 'idle';
+  const data = state.context.result;
+
+  React.useEffect(() => {
+    if (isIdle) {
+      send('FETCH');
+    }
+  }, [send, isIdle]);
 
   if (isLoading) {
     return <LoadingIndicator />;
