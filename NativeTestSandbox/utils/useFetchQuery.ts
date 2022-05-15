@@ -8,7 +8,13 @@ export function useFetchQuery<T>(
   return useQuery<T>(
     queryKey,
     async () => {
-      return fetch(`http://localhost:9000/${path}`).then((res) => res.json());
+      const rawResponse = await fetch(`http://localhost:9000/${path}`);
+      const json = await rawResponse.json();
+      if (!rawResponse.ok) {
+        throw Error(json?.error?.message || 'Something went wrong');
+      }
+
+      return json;
     },
     options,
   );

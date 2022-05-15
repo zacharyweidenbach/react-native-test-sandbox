@@ -1,14 +1,10 @@
-import * as React from 'react';
 import '@testing-library/jest-native/extend-expect';
 import { waitFor } from '@testing-library/react-native';
 
 import * as useFetchQueryModule from '../../../../utils/useFetchQuery';
 import { mockItemEndpoint, itemBuilder } from '../../../../test/mocks/item';
 
-import {
-  wrappedRender,
-  MockedNavigator,
-} from '../../../../test/utils/testHelpers';
+import { wrappedRender } from '../../../../test/utils/wrappedRender';
 import { ConventionalDetailsScreen } from '.';
 
 describe('ConventionalDetailsScreen', () => {
@@ -24,9 +20,7 @@ describe('ConventionalDetailsScreen', () => {
       data: null,
     } as any);
 
-    const { getByA11yLabel } = wrappedRender(
-      <MockedNavigator screen={ConventionalDetailsScreen} />,
-    );
+    const { getByA11yLabel } = wrappedRender(ConventionalDetailsScreen);
 
     expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
   });
@@ -39,9 +33,7 @@ describe('ConventionalDetailsScreen', () => {
       data: null,
     } as any);
 
-    const { getByText } = wrappedRender(
-      <MockedNavigator screen={ConventionalDetailsScreen} />,
-    );
+    const { getByText } = wrappedRender(ConventionalDetailsScreen);
 
     expect(getByText('Whoops! Something went wrong.')).toBeTruthy();
   });
@@ -50,12 +42,9 @@ describe('ConventionalDetailsScreen', () => {
     const item = itemBuilder();
     const scope = mockItemEndpoint(item);
 
-    const { getByText } = wrappedRender(
-      <MockedNavigator
-        screen={ConventionalDetailsScreen}
-        initialParams={{ id: item.id }}
-      />,
-    );
+    const { getByText } = wrappedRender(ConventionalDetailsScreen, {
+      initialParams: { id: item.id },
+    });
 
     waitFor(() => expect(scope).toHaveBeenCalledTimes(1)).then(() => {
       expect(getByText('Player Details')).toBeTruthy();
