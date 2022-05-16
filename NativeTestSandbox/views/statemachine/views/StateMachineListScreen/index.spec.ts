@@ -27,10 +27,6 @@ describe('StateMachineListScreen', () => {
         const { getByA11yLabel } = renderApi;
         expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
       },
-      checkResult: async ({ renderApi }: TestCbArgs) => {
-        const { getByA11yLabel } = renderApi;
-        expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
-      },
       successWithContent: async ({ renderApi, mockData }: TestCbArgs) => {
         const { findByText, getByText } = renderApi;
         expect(
@@ -54,11 +50,11 @@ describe('StateMachineListScreen', () => {
     fetchMachine.withConfig({
       actions: {
         storeResult: assign({
-          result: (_ctx, event) => event.result,
+          result: (_context, event) => event.result,
         }),
       },
       guards: {
-        hasContent: (context) => Boolean((context as any).result.length),
+        hasContent: (context) => (context as any).result.length > 0,
       },
     }),
   ).withEvents({
@@ -67,7 +63,6 @@ describe('StateMachineListScreen', () => {
       exec: () => {},
       cases: [{ result: [item] }, { result: [] }],
     },
-    always: { exec: () => {} },
     'error.platform.StateMachineListScreen.loading:invocation[0]': {
       exec: () => {},
     },
@@ -108,6 +103,8 @@ describe('StateMachineListScreen', () => {
   });
 
   it('should have full coverage', () => {
-    return fetchModel.testCoverage();
+    return fetchModel.testCoverage({
+      filter: (stateNode) => stateNode.key !== 'evaluateResult',
+    });
   });
 });

@@ -10,9 +10,9 @@ export const StateMachineListScreen = () => {
   const [state, send] = useMachine(fetchMachine);
   const navigation = useNavigation();
 
-  const isLoading = state.value === 'idle' || state.value === 'loading';
-  const isError = state.value === 'error';
-  const isIdle = state.value === 'idle';
+  const isIdle = state.matches('idle');
+  const isLoading = state.matches('idle') || state.matches('loading');
+  const isError = state.matches('error');
   const data = state.context.result;
 
   React.useEffect(() => {
