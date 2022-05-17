@@ -11,7 +11,7 @@ export type Item = {
   lastName: string;
 };
 
-export type StateMachineStackList = {
-  StateMachineList: undefined;
-  StateMachineDetails: { id: string };
+export type FSMStackList = {
+  FSMList: undefined;
+  FSMDetails: { id: string };
 };

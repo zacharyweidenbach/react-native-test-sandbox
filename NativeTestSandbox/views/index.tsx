@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { ConventionalStack } from './conventional';
 import { MVCStack } from './mvc';
-import { StateMachineStack } from './statemachine';
+import { FSMStack } from './fsm';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
@@ -26,6 +26,6 @@ export const TabNavigator = () => (
   <Navigator tabBar={(props) => <BottomTabBar {...props} />}>
     <Screen name="ConventionalList" component={ConventionalStack} />
     <Screen name="MVCList" component={MVCStack} />
-    <Screen name="StateMachine" component={StateMachineStack} />
+    <Screen name="FSM" component={FSMStack} />
   </Navigator>
 );

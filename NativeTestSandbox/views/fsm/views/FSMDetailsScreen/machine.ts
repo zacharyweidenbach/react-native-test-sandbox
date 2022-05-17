@@ -2,8 +2,8 @@ import { createMachine, assign } from 'xstate';
 
 import { Item } from '../../../../types';
 
-export const fetchState = {
-  id: 'StateMachineDetailsScreen',
+export const machineConfig = {
+  id: 'FSMDetailsScreen',
   context: { result: undefined },
   initial: 'idle',
   states: {
@@ -27,11 +27,11 @@ export const fetchState = {
   },
 };
 
-export const fetchMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUAuBDVYCy6DGAFgJYB2YAImBkQDazJ4BOYYJAdERDWAMQBiAUQAqAYQASiUAAcA9rCKoiMkpJAAPRAEYAbABY2AVk0BOAMwAOAOwAGSwCZd2g84A0IAJ5bNdtnuvnTOztjAztnTQBfCLc0TBx8YjJKajoGZlY2Ghl0CFIoHghlMA4SADcZAGti2KxcQlIKKnRaeiYWdiycvIRScrxMJRIAbWsAXVVZeUVlVQ0EA1NrNkttEKNjTQNdRwM3TwRLUzZNTetNXTttU2M-bSiYjFqEhuTm1LaMztySfLBGRhkjDYUhomAAZoCALZsGrxepJJotNLtTLZb5QHplGT9abDMYTOQKQazRALHx2Q6OSzU+zmOyaPZabRLE66YzGax2Uy6UyWAxRaIgEgyCBwVSwuqJRopVrpdicbgEqbEpDqRAXRkITTWbTHXT+OzmXQGayhfy6e4gCXPBEy5GfNF5JVEmaquYU-SBDncik3E3aTXmJZ+Om2bTa0KmSKC63w6VvWUo2AAVzweDg8FVkxdKjdiEOS19BnM5gMxgurMDutZ7Msxi5Ru5xktsalryRH3YfwBjGduJJB10ml8VPD2hWxvMms2R3DbPMV3MN31hxbjzhbcR7zlfZVoDmminHkQLNOwT0wTOOt5lgFESAA */
+export const FSMDetailsScreenMachine =
+  /** @xstate-layout N4IgpgJg5mDOIC5QDEDKBZAImALgQwEsAbWVAYwCcwwA7AOgIiLAGJkBRAFQGEAJRUAAcA9rAI4CwmgJAAPRAEYArADY6SgCwaAnAA4ATNoUAGZSv1KANCACei-Rrr6FClQHY3SgMxvtmtwoAvoHWaFi4hCTkVLR0RMJ4EAQ0UCwQUmAMNABuwgDWmWHY+MSklNT08YnJUAjJuWR4ElIA2sYAujIiYs3SSHKIGp50ugqGGkoKGmMKo9Z2CLq6dL5Kpl4a+h4bXrrBoRjFkWUxlQlJKSxgFBTCFHSCRE0AZncAtnRFEaXRFXHnNTqOWEjV6bU6-W64kkfVA8gQQyUIzG2gmUxmc1simGq3Wm22Gl2wRCIBowggcBkXxKUXKsUYzC6omhUhk8M280UCm0dC86KWKi82i8+kM+n2IGpx1+sSqFygTJ6MLZiAsPKWuk8xl0xiU+h1Kk5CFRdG0KlcOuMqI0pl1EqlPzp9FgAFcyGQ4PBIczeiqECoAyN9Uo3KZps5dEaTF5edpPM44-oVKoLPbDt9aac6NdbhRFSzYQN-YGDLoQ2GMVHQyM43qJoYTBY9iSHZmKvnff14bMo0jfDptML3Fs-PovMTAkA */
   createMachine(
     {
-      tsTypes: {} as import('./stateMachine.typegen').Typegen0,
+      tsTypes: {} as import('./machine.typegen').Typegen0,
       schema: {
         context: {} as { result: Item | undefined },
         events: {} as { type: 'FETCH'; id: string },
@@ -41,7 +41,7 @@ export const fetchMachine =
           };
         },
       },
-      ...fetchState,
+      ...machineConfig,
     },
     {
       services: {

@@ -7,25 +7,23 @@ import {
   Icon,
 } from '@ui-kitten/components';
 
-import { StateMachineListScreen } from './views/StateMachineListScreen';
-import { StateMachineDetailsScreen } from './views/StateMachineDetailsScreen';
+import { FSMListScreen } from './views/FSMListScreen';
+import { FSMDetailsScreen } from './views/FSMDetailsScreen';
 
 const Stack = createStackNavigator();
 
-export const StateMachineStack = () => {
+export const FSMStack = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="StateMachineList"
-        component={StateMachineListScreen}
+        name="FSMList"
+        component={FSMListScreen}
         options={() => ({
           header: () => (
             <TopNavigation
-              title={(evaProps) => (
-                <Text {...evaProps}>State Machine List</Text>
-              )}
+              title={(evaProps) => <Text {...evaProps}>FSM List</Text>}
               subtitle={(evaProps) => (
-                <Text {...evaProps}>List with State Machine architecture</Text>
+                <Text {...evaProps}>List with FSM architecture</Text>
               )}
               alignment="center"
               style={{ height: 100 }}
@@ -34,14 +32,12 @@ export const StateMachineStack = () => {
         })}
       />
       <Stack.Screen
-        name="StateMachineDetails"
-        component={StateMachineDetailsScreen}
+        name="FSMDetails"
+        component={FSMDetailsScreen}
         options={() => ({
           header: ({ navigation }) => (
             <TopNavigation
-              title={(evaProps) => (
-                <Text {...evaProps}>State Machine Details</Text>
-              )}
+              title={(evaProps) => <Text {...evaProps}>FSM Details</Text>}
               alignment="center"
               style={{ height: 100 }}
               accessoryLeft={() => (

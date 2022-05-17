@@ -4,15 +4,15 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { useMachine } from '@xstate/react';
 
 import { LoadingIndicator } from '../../../../components/LoadingIndicator';
-import { StateMachineStackList } from '../../../../types';
-import { fetchMachine } from '../StateMachineDetailsScreen/stateMachine';
+import { FSMStackList } from '../../../../types';
+import { FSMDetailsScreenMachine } from './machine';
 
-export const StateMachineDetailsScreen = () => {
+export const FSMDetailsScreen = () => {
   const {
     params: { id },
-  } = useRoute<RouteProp<StateMachineStackList, 'StateMachineDetails'>>();
+  } = useRoute<RouteProp<FSMStackList, 'FSMDetails'>>();
 
-  const [state, send] = useMachine(fetchMachine);
+  const [state, send] = useMachine(FSMDetailsScreenMachine);
 
   const isIdle = state.matches('idle');
   const isLoading = state.matches('idle') || state.matches('loading');

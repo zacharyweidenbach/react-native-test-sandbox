@@ -2,8 +2,8 @@ import { createMachine, assign } from 'xstate';
 
 import { Item } from '../../../../types';
 
-export const fetchState = {
-  id: 'StateMachineListScreen',
+export const machineConfig = {
+  id: 'FSMListScreen',
   context: { result: [] },
   initial: 'idle',
   states: {
@@ -34,11 +34,11 @@ export const fetchState = {
   },
 };
 
-export const fetchMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUAuBDVYCy6DGAFgJYB2YAMkbKsngE5hgkB0REANmAMQBiAogBUAwgAlEoAA4B7WEVREpJcSAAeiAEwBWACzMADAA4AnOqPbtAZguajFgOyaANCACeiAIwA2Pc20G7fprqFp5B6trqAL6RzmiYOPjEZJTUtAxMzOxS6BCkUFwQimCsJABuUgDWxXFYuISkFFQ09IwsWTl5CKTleJgKJADaegC6ytKy8orKagjaXswGOhZGdkbui3NOrohWFswORjaeIZ5mRnra0bEYtYkNKc3pbdm5JPlgdHRSdMwS7JgAM2+AFtmDUEvVkk00q1Mi9Ot0pL1JoMRmMZHJ+tNEHMDMxrOZwnZPO51OoDM43AgtHiLOpPH4LnoSe47Ho7FcQOC6klGqkWhkwKV0OwAK7xABKcFF7FQXHREyxSFUiAMencCy0pgM6j0ZlC7kpO3VzC0RlC9MMxIMFmiMRAJCkEDgym5dyh-KerA4YAVmKmypm7mWzB0lnc7iCFksDiNCEjmlDxiM5qsdmMzKi9rdkL5j1h7VeUD9KOx8fOzE8NuZJOOFn8Ojj9KMpqOwV1qc0mk5Od5DxhguFYsl0tlJaVoBm3kTpPC7j1mmMAS2VOjnn2Rz0mgs7m0mgjWeu8R592hApYsFFeDwcFgAHU5AQhIosCRUOOA5OPHof74DAz-HpewDD3OM6XUBYjBAlNvD0aMyVtbMbghPszy9S9r1vAA5KRnzfJh32VcZ-SUQNv2ZU0ty0Ow7EjaxG22BBljxA4SQudQAjg-8e2Qk8PXzQVPm+D9SK-eMt0THRzgMdYwhTJt901Bk1jWdUtE8Hjj3dPMB1EkBiNLMj40jUNzB3SNghjFdVQgmwf13YILHVbQVjtSIgA */
+export const FSMListScreenMachine =
+  /** @xstate-layout N4IgpgJg5mDOIC5QDEDKBZAMgS1gF1QGMAnMMAOwDpsIAbMAYmQFEAVAYQAlFQAHAe1jY82fuR4gAHogBMARgAclAMwBWAJwKFAFgAMqmcoDsANm0mANCACeiOXN2VVuk2YXrt2hzO0yAvn5WaFi4BCRkVLT8AIYQ2ORQDBBiYNTkAG78ANapwTj4RKQUlFGx8VAI8ZmE0SJiANq6ALoSAkJ14khSiMomcpQyCsraCkY66vIu2la2CDKqSgq6csoKgytGY-6BIHmhhRElMXEJDGDExPzElLy0tQBmVwC2lHsF4cWlJxVV-DUdjRaXTawlEnVA0gQvRklDGwzWRl6yjkRnUMzsnkochMMnUJlRJgUclU8ICQQw+TCRSoYHS0VoAFdamAAEpwBm0PAMVqCUFiCSQ0zqSjaZS6RFGVQmXTKZTydEIOTqYW4oxeVTEhYuUYBHbkfgQOASN5Uw40eg89pggWIDyULRjPojYn2MYKhzaSi6FyuXSeIkOdSqMm7Cn7D6RY7lS188HdBB4ygmdTLZM+IO4qUK+SevReHFyQbqNWikMmg7FWn0pl4Vnszkxjo2hCqIz9GSTcYeFGF7Nt+3LZTqFF9YYyoxlsPvamUWAMwiEOCwADqwgAFuwxLXyHhG9aupDlTDjH7zHLlSZW9mh5QU142+LL70zJOQtPDnOF0uAHL8Tc7ihd2BXkmwPW1NC9dxFBGeYgzbbNE1RNVei0KVvQUV9KQrGkLiuPd+TAxU-SMEVz20ZwNTVQZ3WMJMcWLDwjHkPo8Uw8NqXwuNBUcB0FCdIkNRRBQFWRL0XCMb1xTFXENl1PwgA */
   createMachine(
     {
-      tsTypes: {} as import('./stateMachine.typegen').Typegen0,
+      tsTypes: {} as import('./machine.typegen').Typegen0,
       schema: {
         context: {} as { result: Item[] },
         events: {} as { type: 'FETCH' | 'always' },
@@ -48,7 +48,7 @@ export const fetchMachine =
           };
         },
       },
-      ...fetchState,
+      ...machineConfig,
     },
     {
       services: {

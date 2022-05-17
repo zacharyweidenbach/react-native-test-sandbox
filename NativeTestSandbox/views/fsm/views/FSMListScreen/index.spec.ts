@@ -6,8 +6,8 @@ import nock from 'nock';
 
 import { wrappedRender } from '../../../../test/utils/wrappedRender';
 import { itemBuilder } from '../../../../test/mocks/item';
-import { StateMachineListScreen } from '.';
-import { fetchState } from './stateMachine';
+import { FSMListScreen } from '.';
+import { machineConfig } from './machine';
 import { Item } from 'types';
 import { mergeMetaTests } from '../../test/utils/mergeMetaTests';
 
@@ -16,9 +16,9 @@ type TestCbArgs = {
   mockData: Item;
 };
 
-describe('StateMachineListScreen', () => {
+describe('FSMListScreen', () => {
   const fetchMachine = createMachine(
-    mergeMetaTests(fetchState, {
+    mergeMetaTests(machineConfig, {
       idle: async ({ renderApi }: TestCbArgs) => {
         const { getByA11yLabel } = renderApi;
         expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
@@ -59,11 +59,11 @@ describe('StateMachineListScreen', () => {
     }),
   ).withEvents({
     FETCH: { exec: () => {} },
-    'done.invoke.StateMachineListScreen.loading:invocation[0]': {
+    'done.invoke.FSMListScreen.loading:invocation[0]': {
       exec: () => {},
       cases: [{ result: [item] }, { result: [] }],
     },
-    'error.platform.StateMachineListScreen.loading:invocation[0]': {
+    'error.platform.FSMListScreen.loading:invocation[0]': {
       exec: () => {},
     },
   });
@@ -95,7 +95,7 @@ describe('StateMachineListScreen', () => {
 
       plan.paths.forEach((path) => {
         it(path.description, async () => {
-          const renderApi = wrappedRender(StateMachineListScreen);
+          const renderApi = wrappedRender(FSMListScreen);
           await path.test({ renderApi, mockData: item });
         });
       });

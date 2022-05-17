@@ -4,10 +4,10 @@ import { useNavigation } from '@react-navigation/native';
 import { useMachine } from '@xstate/react';
 
 import { LoadingIndicator } from '../../../../components/LoadingIndicator';
-import { fetchMachine } from './stateMachine';
+import { FSMListScreenMachine } from './machine';
 
-export const StateMachineListScreen = () => {
-  const [state, send] = useMachine(fetchMachine);
+export const FSMListScreen = () => {
+  const [state, send] = useMachine(FSMListScreenMachine);
   const navigation = useNavigation();
 
   const isIdle = state.matches('idle');
@@ -36,9 +36,7 @@ export const StateMachineListScreen = () => {
         <ListItem
           title={`${item.firstName} ${item.lastName}`}
           description={`Team Colors: ${item.teamColor}`}
-          onPress={() =>
-            navigation.navigate('StateMachineDetails', { id: item.id })
-          }
+          onPress={() => navigation.navigate('FSMDetails', { id: item.id })}
         />
       )}
       keyExtractor={(item) => item.id}
