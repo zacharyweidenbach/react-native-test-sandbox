@@ -1,3 +1,4 @@
+import 'isomorphic-fetch';
 import 'react-native-gesture-handler/jestSetup';
 
 jest.mock('react-native-reanimated', () => {
