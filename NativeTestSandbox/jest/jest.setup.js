@@ -38,3 +38,19 @@ jest.mock('@react-navigation/native', () => {
     }),
   };
 });
+
+/*
+  Resolves Reference Error when jest tests exit
+
+ReferenceError: You are trying to `import` a file after the Jest environment has been torn down.
+
+      at Object.get Linking [as Linking] (node_modules/react-native/index.js:241:12)
+      at node_modules/@react-navigation/native/lib/commonjs/useLinking.native.tsx:121:15
+      at Object.invokeGuardedCallbackProd (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11308:10)
+      at invokeGuardedCallback (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11499:31)
+      at flushPassiveEffectsImpl (node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14560:11)
+*/
+jest.mock('@react-navigation/native/lib/commonjs/useLinking.native', () => ({
+  default: () => ({ getInitialState: { then: jest.fn() } }),
+  __esModule: true,
+}));
