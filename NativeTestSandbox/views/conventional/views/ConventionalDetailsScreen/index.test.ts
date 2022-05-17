@@ -1,56 +1,53 @@
 import '@testing-library/jest-native/extend-expect';
-import { waitFor } from '@testing-library/react-native';
+import { cleanup } from '@testing-library/react-native';
+import nock from 'nock';
 
-import * as useFetchQueryModule from '../../../../utils/useFetchQuery';
-import { mockItemEndpoint, itemBuilder } from '../../../../test/mocks/item';
+import { itemBuilder } from '../../../../test/mocks/item';
 
 import { wrappedRender } from '../../../../test/utils/wrappedRender';
 import { ConventionalDetailsScreen } from '.';
 
 describe('ConventionalDetailsScreen', () => {
-  beforeAll(() => {
-    // https://github.com/facebook/jest/issues/6434
-    jest.useFakeTimers();
+  afterEach(() => {
+    nock.cleanAll();
+    cleanup();
   });
-  it('should be loading when fetching', () => {
-    const spy = jest.spyOn(useFetchQueryModule, 'useFetchQuery');
-    spy.mockReturnValue({
-      isLoading: true,
-      isError: false,
-      data: null,
-    } as any);
 
-    const { getByA11yLabel } = wrappedRender(ConventionalDetailsScreen);
+  it('should be loading when fetching', () => {
+    const item = itemBuilder();
+    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
+
+    const { getByA11yLabel } = wrappedRender(ConventionalDetailsScreen, {
+      initialParams: { id: item.id },
+    });
 
     expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
   });
 
-  it('should show error if something goes wrong', () => {
-    const spy = jest.spyOn(useFetchQueryModule, 'useFetchQuery');
-    spy.mockReturnValue({
-      isLoading: false,
-      isError: true,
-      data: null,
-    } as any);
-
-    const { getByText } = wrappedRender(ConventionalDetailsScreen);
-
-    expect(getByText('Whoops! Something went wrong.')).toBeTruthy();
-  });
-
-  it('should show data when fetched', () => {
+  it('should show error if something goes wrong', async () => {
     const item = itemBuilder();
-    const scope = mockItemEndpoint(item);
+    nock('http://localhost:9000')
+      .get(`/items/${item.id}`)
+      .reply(500, { error: { message: 'Something went wrong' } });
 
-    const { getByText } = wrappedRender(ConventionalDetailsScreen, {
+    const { findByText } = wrappedRender(ConventionalDetailsScreen, {
       initialParams: { id: item.id },
     });
 
-    waitFor(() => expect(scope).toHaveBeenCalledTimes(1)).then(() => {
-      expect(getByText('Player Details')).toBeTruthy();
-      expect(getByText(`First Name: ${item.firstName}`)).toBeTruthy();
-      expect(getByText(`Last Name: ${item.lastName}`)).toBeTruthy();
-      expect(getByText(`Team Color: ${item.teamColor}`)).toBeTruthy();
+    expect(await findByText('Whoops! Something went wrong.')).toBeTruthy();
+  });
+
+  it('should show data when fetched', async () => {
+    const item = itemBuilder();
+    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
+
+    const { getByText, findByText } = wrappedRender(ConventionalDetailsScreen, {
+      initialParams: { id: item.id },
     });
+
+    expect(await findByText('Player Details')).toBeTruthy();
+    expect(getByText(`First Name: ${item.firstName}`)).toBeTruthy();
+    expect(getByText(`Last Name: ${item.lastName}`)).toBeTruthy();
+    expect(getByText(`Team Color: ${item.teamColor}`)).toBeTruthy();
   });
 });
