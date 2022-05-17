@@ -10,3 +10,8 @@ export type Item = {
   firstName: string;
   lastName: string;
 };
+
+export type StateMachineStackList = {
+  StateMachineList: undefined;
+  StateMachineDetails: { id: string };
+};
