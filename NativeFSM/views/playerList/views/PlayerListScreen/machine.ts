@@ -1,10 +1,11 @@
 import { createMachine, assign } from 'xstate';
 
 import { Item } from '../../../../types';
+import { fetchMachine, defaultContext } from '../../../../network/fetchMachine';
 
 export const machineConfig = {
   id: 'PlayerListScreen',
-  context: { result: [] },
+  context: { result: [], error: null },
   initial: 'idle',
   states: {
     idle: {
@@ -13,20 +14,32 @@ export const machineConfig = {
       },
     },
     loading: {
-      invoke: {
-        src: 'fetchService',
-        onDone: {
-          target: 'evaluateResult',
-          actions: 'storeResult',
+      initial: 'fetching',
+      states: {
+        fetching: {
+          invoke: {
+            id: 'fetchMachine',
+            src: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
+            onDone: {
+              target: 'evaluateResult',
+              actions: 'storeResult',
+            },
+          },
         },
-        onError: 'error',
+        evaluateResult: {
+          always: [
+            {
+              target: '#PlayerListScreen.error',
+              cond: 'hasError',
+            },
+            {
+              target: '#PlayerListScreen.successWithContent',
+              cond: 'hasContent',
+            },
+            { target: '#PlayerListScreen.successNoContent' },
+          ],
+        },
       },
-    },
-    evaluateResult: {
-      always: [
-        { target: 'successWithContent', cond: 'hasContent' },
-        { target: 'successNoContent' },
-      ],
     },
     successWithContent: { type: 'final' as const },
     successNoContent: { type: 'final' as const },
@@ -35,40 +48,28 @@ export const machineConfig = {
 };
 
 export const PlayerListScreenMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QDEDKBZAMgS1gF1QGMAnMMAOwDpsIAbMAYmQFEAVAYQAlFQAHAe1jY82fuR4gAHogBMARgAclAMwBWAJwKFAFgAMqmcoDsANm0mANCACeiOXN2VVuk2YXrt2hzO0yAvn5WaFi4BCRkVLT8AIYQ2ORQDBBiYNTkAG78ANapwTj4RKQUlFGx8VAI8ZmE0SJiANq6ALoSAkJ14khSiMomcpQyCsraCkY66vIu2la2CDKqSgq6csoKgytGY-6BIHmhhRElMXEJDGDExPzElLy0tQBmVwC2lHsF4cWlJxVV-DUdjRaXTawlEnVA0gQvRklDGwzWRl6yjkRnUMzsnkochMMnUJlRJgUclU8ICQQw+TCRSoYHS0VoAFdamAAEpwBm0PAMVqCUFiCSQ0zqSjaZS6RFGVQmXTKZTydEIOTqYW4oxeVTEhYuUYBHbkfgQOASN5Uw40eg89pggWIDyULRjPojYn2MYKhzaSi6FyuXSeIkOdSqMm7Cn7D6RY7lS188HdBB4ygmdTLZM+IO4qUK+SevReHFyQbqNWikMmg7FWn0pl4Vnszkxjo2hCqIz9GSTcYeFGF7Nt+3LZTqFF9YYyoxlsPvamUWAMwiEOCwADqwgAFuwxLXyHhG9aupDlTDjH7zHLlSZW9mh5QU142+LL70zJOQtPDnOF0uAHL8Tc7ihd2BXkmwPW1NC9dxFBGeYgzbbNE1RNVei0KVvQUV9KQrGkLiuPd+TAxU-SMEVz20ZwNTVQZ3WMJMcWLDwjHkPo8Uw8NqXwuNBUcB0FCdIkNRRBQFWRL0XCMb1xTFXENl1PwgA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QAUA2BDAnmATgGQEtYAXAZQGMcwwA7AOgIlTAGIAxAUQBUBhACUSgADgHtYBYgRE1BIAB6IAjAFYAbHWUAWTQE4AHACYdigAwrVB5QBoQmRAct1NBgMwuDAdkWLNHv6pcAX0CbNCxcQhIKKlo6VBF0CAIaKDoAMzBicgALZKgWCGkwBhoANxEAa2Kw7HwiMkpqenjEvPTMnLyEZPLydElpAG0TAF1ZUXEBmSR5ex0dJxMvVRMDPVVlE00Ta1tEZw86Uxc9Dz09ZQvFFx1g0IxayIaY5oSklPas3JSWXBwRHB0IQYYhpAEAWzoNQi9WiTTibzaGS+XR6Ij6U2GYxmEwkUmmoAUCBcJhMdB0SxUykUHhcqm8mhsdmJqnUrJcHgMqj0mjcJgudxA0LqUUasRa71SYFK6FQAFd+mAAEpwOWoYgscZiPHSWREjw7DQ8-Q6TSKc6aCxM-aWugrE4eAKrEyqDzKIKCmgiCBwWTCp5w2KMZhayb4vX7AzWhAOMnKSx6E4GRT0zSXTSC-2wsWvVofZGdFKhnUE2YIDbks2mRO8vSknS7Zkcw7nVTbRM7TamZSZh4w0UvBF5qUy+WKlWwNXEYtTCMIXQuI4GNPKZQeU36LaMvbz7ZHEwnU51laOna98Ii57wiV5GfhmZEs2V7z8ly1+uNxAkzR0VtvtSWNoJzno82aDpO5DkHAsAAOoSNkPDSMQtDTji2qzg+iAUuoBprKsDgLm40aWnodoulStZcvyIH9lesQQVBsCwAAciIiE0MhHF3rqmEIMYBhOMmWhLAYJg6MuHjRloP7HHom4uOaqY0Zegb0H8ALcaWRI6PSdCOu69aWl4ZjRnSZIphyJxvrSNIuspAY5ppc40s+1ZvicH7Rj4hzxpcgEqM4gXBMEQA */
   createMachine(
     {
       tsTypes: {} as import('./machine.typegen').Typegen0,
       schema: {
-        context: {} as { result: Item[] },
+        context: {} as { result: Item[]; error: any },
         events: {} as { type: 'FETCH' | 'always' },
-        services: {} as {
-          fetchService: {
-            data: Item[];
-          };
-        },
       },
       ...machineConfig,
     },
     {
-      services: {
-        fetchService: async () => {
-          const response = await fetch('http://localhost:9000/items');
-          if (response.ok) {
-            const items = await response.json();
-            return items;
-          } else {
-            throw new Error('Failed to fetch items.');
-          }
-        },
-      },
       actions: {
         storeResult: assign({
-          result: (_, event) => event.data,
+          result: (_, event) =>
+            (event.data as { result: Item[]; error: any }).result,
+          error: (_, event) =>
+            (event.data as { result: Item[]; error: any }).error,
         }),
       },
       guards: {
         hasContent: (context) => context.result.length > 0,
+        hasError: (context) => context.error !== null,
       },
     },
   );

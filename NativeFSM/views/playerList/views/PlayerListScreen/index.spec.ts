@@ -50,21 +50,26 @@ describe('PlayerListScreen', () => {
     fetchMachine.withConfig({
       actions: {
         storeResult: assign({
-          result: (_context, event) => event.result,
+          result: (_, event) =>
+            (event.data as { result: Item[]; error: any }).result,
+          error: (_, event) =>
+            (event.data as { result: Item[]; error: any }).error,
         }),
       },
       guards: {
         hasContent: (context) => (context as any).result.length > 0,
+        hasError: (context) => (context as any).error !== null,
       },
     }),
   ).withEvents({
     FETCH: { exec: () => {} },
-    'done.invoke.PlayerListScreen.loading:invocation[0]': {
+    'done.invoke.fetchMachine': {
       exec: () => {},
-      cases: [{ result: [item] }, { result: [] }],
-    },
-    'error.platform.PlayerListScreen.loading:invocation[0]': {
-      exec: () => {},
+      cases: [
+        { data: { result: [item], error: null } },
+        { data: { result: [], error: null } },
+        { data: { result: [], error: 'Something went wrong!' } },
+      ],
     },
   });
 
@@ -104,7 +109,8 @@ describe('PlayerListScreen', () => {
 
   it('should have full coverage', () => {
     return fetchModel.testCoverage({
-      filter: (stateNode) => stateNode.key !== 'evaluateResult',
+      filter: (stateNode) =>
+        stateNode.key !== 'evaluateResult' && stateNode.key !== 'fetching',
     });
   });
 });
