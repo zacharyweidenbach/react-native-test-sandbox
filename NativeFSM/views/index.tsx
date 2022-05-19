@@ -2,9 +2,7 @@ import React, { FC } from 'react';
 import { BottomNavigation, BottomNavigationTab } from '@ui-kitten/components';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import { ConventionalStack } from './conventional';
-import { MVCStack } from './mvc';
-import { FSMStack } from './fsm';
+import { PlayerListStack } from './playerList';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
@@ -16,16 +14,12 @@ const BottomTabBar: FC<{ navigation: any; state: any }> = ({
     selectedIndex={state.index}
     onSelect={(index) => navigation.navigate(state.routeNames[index])}
   >
-    <BottomNavigationTab title="Conventional List" />
-    <BottomNavigationTab title="MVC List" />
-    <BottomNavigationTab title="State Machine List" />
+    <BottomNavigationTab title="Player List" />
   </BottomNavigation>
 );
 
 export const TabNavigator = () => (
   <Navigator tabBar={(props) => <BottomTabBar {...props} />}>
-    <Screen name="ConventionalList" component={ConventionalStack} />
-    <Screen name="MVCList" component={MVCStack} />
-    <Screen name="FSM" component={FSMStack} />
+    <Screen name="PlayerList" component={PlayerListStack} />
   </Navigator>
 );
