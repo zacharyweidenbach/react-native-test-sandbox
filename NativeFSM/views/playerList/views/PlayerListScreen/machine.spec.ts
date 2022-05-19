@@ -54,11 +54,15 @@ describe('PlayerListScreenMachine', () => {
 
   it('should eventually reach error', (done) => {
     nock('http://localhost:9000')
+      .persist()
       .get('/items')
       .reply(500, { error: { message: 'Something went wrong' } });
     const fetchService = interpret(PlayerListScreenMachine).onTransition(
       (state) => {
         if (state.matches('error')) {
+          expect((state.context.error as Error).message).toEqual(
+            'Something went wrong',
+          );
           done();
         }
       },

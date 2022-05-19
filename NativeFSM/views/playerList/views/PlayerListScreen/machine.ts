@@ -24,14 +24,14 @@ export const machineConfig = {
               target: 'evaluateResult',
               actions: 'storeResult',
             },
+            onError: {
+              target: '#PlayerListScreen.error',
+              actions: 'storeError',
+            },
           },
         },
         evaluateResult: {
           always: [
-            {
-              target: '#PlayerListScreen.error',
-              cond: 'hasError',
-            },
             {
               target: '#PlayerListScreen.successWithContent',
               cond: 'hasContent',
@@ -48,7 +48,7 @@ export const machineConfig = {
 };
 
 export const PlayerListScreenMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QAUA2BDAnmATgGQEtYAXAZQGMcwwA7AOgIlTAGIAxAUQBUBhACUSgADgHtYBYgRE1BIAB6IAjAFYAbHWUAWTQE4AHACYdigAwrVB5QBoQmRAct1NBgMwuDAdkWLNHv6pcAX0CbNCxcQhIKKlo6VBF0CAIaKDoAMzBicgALZKgWCGkwBhoANxEAa2Kw7HwiMkpqenjEvPTMnLyEZPLydElpAG0TAF1ZUXEBmSR5ex0dJxMvVRMDPVVlE00Ta1tEZw86Uxc9Dz09ZQvFFx1g0IxayIaY5oSklPas3JSWXBwRHB0IQYYhpAEAWzoNQi9WiTTibzaGS+XR6Ij6U2GYxmEwkUmmoAUCBcJhMdB0SxUykUHhcqm8mhsdmJqnUrJcHgMqj0mjcJgudxA0LqUUasRa71SYFK6FQAFd+mAAEpwOWoYgscZiPHSWREjw7DQ8-Q6TSKc6aCxM-aWugrE4eAKrEyqDzKIKCmgiCBwWTCp5w2KMZhayb4vX7AzWhAOMnKSx6E4GRT0zSXTSC-2wsWvVofZGdFKhnUE2YIDbks2mRO8vSknS7Zkcw7nVTbRM7TamZSZh4w0UvBF5qUy+WKlWwNXEYtTCMIXQuI4GNPKZQeU36LaMvbz7ZHEwnU51laOna98Ii57wiV5GfhmZEs2V7z8ly1+uNxAkzR0VtvtSWNoJzno82aDpO5DkHAsAAOoSNkPDSMQtDTji2qzg+iAUuoBprKsDgLm40aWnodoulStZcvyIH9lesQQVBsCwAAciIiE0MhHF3rqmEIMYBhOMmWhLAYJg6MuHjRloP7HHom4uOaqY0Zegb0H8ALcaWRI6PSdCOu69aWl4ZjRnSZIphyJxvrSNIuspAY5ppc40s+1ZvicH7Rj4hzxpcgEqM4gXBMEQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QAUA2BDAnmATgGQEtYAXAZQGMcwwA7AOgIlTAGIAxAUQBUBhACUSgADgHtYBYgRE1BIAB6IAjAFYAbHWUAWZQAZNAZgCc2-YoBMygDQhMSzYY0AOQ4dX6zbx6tWLNAXz9rNCxcQhIKKlo6VBF0CAIaKDoAMzBicgALBKgWCGkwBhoANxEAawLU9IyAWXRMhLBZUXFJaVkFBE1VBzN9HUd9e1UdQ30AdisbJQm6fSNXZUczHVMLAKCMbHwiMkpqehi47LowIvRUAFd0YjAAJTgL1GIWJrEJKRkkeURHLzpNMZjDyjZRjTSKRSqay2BBmcx0AYuVSLZarZQBQIgGgiCBwWTBLZhXaReiMZivFofdqITRmaF2TR0bpmTQGRwA5GqNaYgmhHYRfbRWLxRIpNL1RIU95tL4dPo6Og6cz9IYjcaTGGQ5ROJEolbmdE8zZ88J7KKHEVJU7nK43e6wR7EKWtT6gDreRx0QyKAZq1wA8H0hA+hzGFlg-TI3ps9YgXnbU0koVHSVfZrS13fWFjdRK5bs1xqiZBwxmHWGZSKCaGRyg7yx+NEgVRB3kchwWAAdQkGR40huNCdabeLupnTpU1hEP+jjBs7Gpdcs8NGxCCeJgtb7dgsAAciI+4PaEPhCOqbKaROYWYxp6zEsAToxvqLDpVA3jevm-RcDgRDhnXPN1EG9RR-kBYF9FBcFISDEMvVpANI2UaN9EcD81ybM1M3TUcL2DRw4IcRYXHGbpjB0e9FAxPwgA */
   createMachine(
     {
       tsTypes: {} as import('./machine.typegen').Typegen0,
@@ -63,13 +63,14 @@ export const PlayerListScreenMachine =
         storeResult: assign({
           result: (_, event) =>
             (event.data as { result: Item[]; error: any }).result,
+        }),
+        storeError: assign({
           error: (_, event) =>
             (event.data as { result: Item[]; error: any }).error,
         }),
       },
       guards: {
         hasContent: (context) => context.result.length > 0,
-        hasError: (context) => context.error !== null,
       },
     },
   );

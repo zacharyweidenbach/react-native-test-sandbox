@@ -1,12 +1,7 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign, sendParent } from 'xstate';
+import { actionTypes } from 'xstate/lib/actions';
 
 const RETRY_LIMIT = 2;
-
-type RequestOptions = {
-  path: string;
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: any;
-};
 
 type Context = {
   path: string;
@@ -76,15 +71,16 @@ export const fetchMachineConfig = {
     },
     error: {
       type: 'final' as const,
-      data: {
-        error: (context: Context) => context.error,
-        result: (context: Context) => context.result,
-      },
+      entry: sendParent((context: Context) => ({
+        type: actionTypes.error,
+        data: {
+          error: context.error,
+        },
+      })),
     },
     success: {
       type: 'final' as const,
       data: {
-        error: (context: Context) => context.error,
         result: (context: Context) => context.result,
       },
     },
@@ -92,7 +88,7 @@ export const fetchMachineConfig = {
 };
 
 export const fetchMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QDMwBcDGALAdKzWAlgHZQDEEA9sWDiQG6UDWt+2e62JUCDlGAQzSFqAbQAMAXUSgADpViFh1GSAAeiAEwBOACw4ArAHZd43boAcANnFHtm2wBoQAT0QBaHeJzjNFo+LWOgDMFuLBwQC+kc5suHHcZGAATsmUyTiyADZCyOkAthwERVykvMSMgsrEEtJIIPKK1aoaCDpWPibiBhbBxgCMRkYGwc5uCO79FgY4uqEGVr19VtrL0bGc8ZsAoqnpZKqNSiLELYi6RsE4Rv3B-X4W2iMXRmMe-YM4DiMj4is2-VW6xAcRwyTAyHBsCIpAAKswwMQKNRaHwWCVcODIXAYVB4SxiOVKkITrVDgpjip6q0rP1DAFgppjH4bsEnK5EP0rB0jJpdJpGYCLH5NJojMDQViobj8YiknsMtlcgUMWCIdLuLLCXwqqSpOSmiczghtNMcNp+uFRcFTL17G8EBY6YtxBaDL5dNoAoDojEQMRKBA4KpQQlSAbKadqedNDhpv0evydHZQroHZMhjhFgYDNpwoyjFZLlYJZsMbs0skI81owgDJoOtorHdwnopkYLBZ01MLOam7oeoFhg3+qXilKcZqEVG5BSa6BWryjDgE3nE8NbBEHQn9KLdAmPmzwrTNGP2ClK9WjbXLZ8zHcxeJAsK7N3tNdusEXYFRdyS37QVgABXDAMDgeB6iOed1E5J8ZiLXMBxtT0bW7esV2mZtGU9KwFkZM8sCvKkF05Xt40TUUvVWCw5nTL8rl8awbhzWxuV0X1IiAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDMwBcDGALAdKzWAlgHZQDEEA9sWDiQG6UDWt+2e62JUCDlGAQzSFqAbQAMAXUSgADpViFh1GSAAeiAEwBOACw4ArAHZd43boAcANnFHtm2wBoQAT0QBaHeJzjNFo+LWOgDMFuLBwQC+kc5suHHcZGAATsmUyTiyADZCyOkAthwERVykvMSMgsrEEtJIIPKK1aoaCDpWPibiBhbBxgCMRkYGwc5uCO79FgY4uqEGVr19VtrL0bGc8ZsAoqnpZKqNSiLELYi6RsE4Rv3B-X4W2iMXRmMe-YM4DiMj4is2-VW6xAcRwyTAyHBsCIpAAKswwMQKNRaHwWCVcODIXAYVB4SxiOVKkITrVDgpjip6q0rP1DAFgppjH4bsEnK5EP0rB0jJpdJpGYCLH5NJojMDQViobj8YiknsMtlcgUMWCIdLuLLCXwqqSpOSmiczghtNMcNp+uEIvcblYem8EP0DJovnz+hcdCNuVZojEQMRKBA4KpQQlSAbKadqecXdMnRZ+To7KFdA7JkMcIsDAZtFaxVZLj6-aGdgqI81owhnR1tFY7uE9FMjBYLGmphZzbXdD1AsNNLSJZs1djoZqEVG5BSK6BWryjDgnbmehcDLYIg6nfpRbonR82eFaZpB8UUmlkuWjZXLZ8zHcxeJAsK7G3tNdusFFg-hf3ucf2LAAFcMAwOB4HqI5p3UTkHxmAsc27YJzFWVMOQmJ0XSmBYIj5WssKPYtNgvKkZ05Ds42XUVtGTBNRlQ9wPyuXx-D+G4HG7BZfUiIA */
   createMachine(
     {
       tsTypes: {} as import('./fetchMachine.typegen').Typegen0,
@@ -144,7 +140,12 @@ export const fetchMachine =
             const token = await response.json();
             return token;
           } else {
-            throw new Error('Failed to refresh token.');
+            const errorResponse = await response.json();
+            if (errorResponse.error && errorResponse.error.message) {
+              throw new Error(errorResponse.error.message);
+            } else {
+              throw new Error('Failed to refresh token.');
+            }
           }
         },
       },

@@ -1,7 +1,36 @@
-import { interpret } from 'xstate';
+import {
+  createMachine,
+  interpret,
+  assign,
+  DoneInvokeEvent,
+  Action,
+} from 'xstate';
 import nock from 'nock';
 
 import { fetchMachine, defaultContext } from './fetchMachine';
+
+const getTestMachineHarness = (fetchMachine: any) =>
+  createMachine({
+    id: 'test',
+    context: { error: null },
+    initial: 'testing',
+    states: {
+      testing: {
+        invoke: {
+          src: fetchMachine,
+          onDone: 'done',
+          onError: {
+            actions: assign({
+              error: (_, event) => (event as any).data.error,
+            }) as unknown as Action<{ error: null }, DoneInvokeEvent<any>>[],
+            target: 'error',
+          },
+        },
+      },
+      done: { type: 'final' as const },
+      error: { type: 'final' as const },
+    },
+  });
 
 describe('fetchMachine', () => {
   afterEach(async () => {
@@ -53,15 +82,21 @@ describe('fetchMachine', () => {
         return { error: { message: 'Oh no! An error!' } };
       });
 
-    const fetchService = interpret(
+    const fetchMachineTestHarness = getTestMachineHarness(
       fetchMachine.withContext({ ...defaultContext, path: 'test' }),
-    ).onTransition((state) => {
-      if (state.matches('error')) {
-        expect(spyFn).toHaveBeenCalledTimes(3);
-        expect(state.context.error === 'Oh no! An error!');
-        done();
-      }
-    });
+    );
+
+    const fetchService = interpret(fetchMachineTestHarness).onTransition(
+      (state) => {
+        if (state.matches('error')) {
+          expect(spyFn).toHaveBeenCalledTimes(3);
+          expect((state.context.error as unknown as Error).message).toEqual(
+            'Oh no! An error!',
+          );
+          done();
+        }
+      },
+    );
 
     fetchService.start();
   });
@@ -76,15 +111,21 @@ describe('fetchMachine', () => {
         return {};
       });
 
-    const fetchService = interpret(
+    const fetchMachineTestHarness = getTestMachineHarness(
       fetchMachine.withContext({ ...defaultContext, path: 'test' }),
-    ).onTransition((state) => {
-      if (state.matches('error')) {
-        expect(spyFn).toHaveBeenCalledTimes(3);
-        expect(state.context.error === 'Something went wrong');
-        done();
-      }
-    });
+    );
+
+    const fetchService = interpret(fetchMachineTestHarness).onTransition(
+      (state) => {
+        if (state.matches('error')) {
+          expect(spyFn).toHaveBeenCalledTimes(3);
+          expect((state.context.error as unknown as Error).message).toEqual(
+            'Something went wrong',
+          );
+          done();
+        }
+      },
+    );
 
     fetchService.start();
   });
@@ -107,16 +148,22 @@ describe('fetchMachine', () => {
         return { error: { message: 'Failed to refresh.' } };
       });
 
-    const fetchService = interpret(
+    const fetchMachineTestHarness = getTestMachineHarness(
       fetchMachine.withContext({ ...defaultContext, path: 'test' }),
-    ).onTransition((state) => {
-      if (state.matches('error')) {
-        expect(spyFnIntendedEndpoint).toHaveBeenCalledTimes(1);
-        expect(spyFnRefreshEndpoint).toHaveBeenCalledTimes(1);
-        expect(state.context.error === 'Failed to refresh.');
-        done();
-      }
-    });
+    );
+
+    const fetchService = interpret(fetchMachineTestHarness).onTransition(
+      (state) => {
+        if (state.matches('error')) {
+          expect(spyFnIntendedEndpoint).toHaveBeenCalledTimes(1);
+          expect(spyFnRefreshEndpoint).toHaveBeenCalledTimes(1);
+          expect((state.context.error as unknown as Error).message).toEqual(
+            'Failed to refresh.',
+          );
+          done();
+        }
+      },
+    );
 
     fetchService.start();
   });

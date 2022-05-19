@@ -68,7 +68,12 @@ describe('PlayerListScreen', () => {
       cases: [
         { data: { result: [item], error: null } },
         { data: { result: [], error: null } },
-        { data: { result: [], error: 'Something went wrong!' } },
+      ],
+    },
+    'error.platform.fetchMachine': {
+      exec: () => {},
+      cases: [
+        { data: { result: [], error: new Error('Something went wrong!') } },
       ],
     },
   });
