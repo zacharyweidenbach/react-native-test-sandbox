@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { render, RenderOptions } from '@testing-library/react-native';
-import { QueryKey } from 'react-query';
 
 import { MockedNavigator } from './renderUtils/MockedNavigator';
 import { getTestWrapper } from './renderUtils/getTestWrapper';
@@ -8,19 +7,14 @@ import { getTestWrapper } from './renderUtils/getTestWrapper';
 type WrappedRenderOptions = {
   initialParams?: { [key: string]: any };
   renderOptions?: RenderOptions;
-  RQCacheOverrides?: {
-    queryKey: QueryKey;
-    queryValue: any;
-  }[];
 };
 
 const defaultOptions = {
   initialParams: {},
   renderOptions: {},
-  RQCacheOverrides: [],
 };
 
-export const wrappedRender = (
+export const wrappedRender = async (
   screen: React.ComponentType<any>,
   optionsOverrides: WrappedRenderOptions = {},
 ) => {
@@ -28,7 +22,7 @@ export const wrappedRender = (
     ...defaultOptions,
     ...optionsOverrides,
   };
-  const Wrapper = getTestWrapper(testWrapperOptions);
+  const Wrapper = await getTestWrapper(testWrapperOptions);
 
   const { rerender, ...result } = render(
     <MockedNavigator screen={screen} initialParams={initialParams} />,

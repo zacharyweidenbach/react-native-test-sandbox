@@ -39,6 +39,10 @@ jest.mock('@react-navigation/native', () => {
   };
 });
 
+jest.mock('@react-native-async-storage/async-storage', () => {
+  return require('../store/utils/StoreRepository/StoreInterface.mock').getMockStoreInferface();
+});
+
 /*
   Resolves Reference Error when jest tests exit
 

@@ -11,7 +11,7 @@ export const itemBuilderRaw = build<Item>({
     teamColor: fake((f) =>
       f.random.arrayElement(['blue', 'green', 'yellow', 'red']),
     ),
-    createdAt: fake((f) => f.date.recent()),
+    createdAt: fake((f) => f.date.recent().toISOString()),
   },
 });
 
