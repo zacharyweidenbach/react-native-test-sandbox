@@ -9,23 +9,27 @@ import {
 import { AuthData, authQueryMachine } from '.';
 
 export const useAuthService = () => {
-  return useInterpret(authQueryMachine);
+  const service = useInterpret(authQueryMachine);
+  return service;
 };
 
 export const useAuthQuery = (
   authQueryService: InterpreterFrom<typeof authQueryMachine>,
 ) => {
-  return useMemo<QueryMethods<AuthData>>(
+  const queryMethods = useMemo<QueryMethods<AuthData>>(
     () => getQueryServiceMethods<AuthData>(authQueryService),
     [authQueryService],
   );
+  return queryMethods;
 };
 
 export const useAuth = (
   authQueryService: InterpreterFrom<typeof authQueryMachine>,
 ) => {
-  return useSelector(
+  const result = useSelector(
     authQueryService,
     (state) => state.context.result as AuthData | null,
   );
+
+  return result;
 };

@@ -4,7 +4,7 @@ import nock from 'nock';
 import { itemBuilder } from '../../../../../../test/mocks/item';
 import { PlayerDetailsScreenMachine } from './machine';
 
-describe('PlayerDetailsScreenMachine', () => {
+describe.skip('PlayerDetailsScreenMachine', () => {
   afterEach(async () => {
     nock.cleanAll();
   });

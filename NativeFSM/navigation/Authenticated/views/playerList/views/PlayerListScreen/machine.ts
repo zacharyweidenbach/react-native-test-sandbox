@@ -62,7 +62,7 @@ export const PlayerListScreenMachine =
   });
 
 export const usePlayerListScreenMachine = () => {
-  const { playerListQuery, playerList } = useStoreContext();
+  const { playerListQuery } = useStoreContext();
 
   const playerListScreenService = useInterpret(PlayerListScreenMachine, {
     services: {
@@ -87,9 +87,5 @@ export const usePlayerListScreenMachine = () => {
     state.matches('local.error'),
   );
 
-  return {
-    isLoading,
-    isError,
-    playerList,
-  };
+  return { isLoading, isError };
 };

@@ -3,11 +3,13 @@ import { List, ListItem, Text } from '@ui-kitten/components';
 import { useNavigation } from '@react-navigation/native';
 
 import { LoadingIndicator } from '../../../../../../components/LoadingIndicator';
+import { useStoreContext } from '../../../../../../store/store.provider';
 import { usePlayerListScreenMachine } from './machine';
 
 export const PlayerListScreen = () => {
   const navigation = useNavigation();
-  const { isLoading, isError, playerList } = usePlayerListScreenMachine();
+  const { isLoading, isError } = usePlayerListScreenMachine();
+  const { playerList } = useStoreContext();
 
   if (isLoading) {
     return <LoadingIndicator />;

@@ -1,5 +1,5 @@
 import '@testing-library/jest-native/extend-expect';
-import { assign, createMachine } from 'xstate';
+import { createMachine } from 'xstate';
 import { createModel } from '@xstate/test';
 import { cleanup, RenderAPI } from '@testing-library/react-native';
 import nock from 'nock';
@@ -16,64 +16,60 @@ type TestCbArgs = {
   mockData: Item;
 };
 
-describe('PlayerListScreen', () => {
-  const fetchMachine = createMachine(
-    mergeMetaTests(machineConfig, {
-      loading: async ({ renderApi }: TestCbArgs) => {
-        const { getByA11yLabel } = renderApi;
-        expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
-      },
-      successWithContent: async ({ renderApi, mockData }: TestCbArgs) => {
-        const { findByText, getByText } = renderApi;
-        expect(
-          await findByText(`${mockData.firstName} ${mockData.lastName}`),
-        ).toBeTruthy();
-        expect(getByText(`Team Colors: ${mockData.teamColor}`)).toBeTruthy();
-      },
-      successNoContent: async ({ renderApi }: TestCbArgs) => {
-        const { findByText } = renderApi;
-        expect(await findByText('Nothing Here!')).toBeTruthy();
-      },
-      error: async ({ renderApi }: TestCbArgs) => {
-        const { findByText } = renderApi;
-        expect(await findByText('Whoops! Something went wrong.')).toBeTruthy();
-      },
-    }),
-  );
+machineConfig.states.local = mergeMetaTests(machineConfig.states.local, {
+  loading: async ({ renderApi }: TestCbArgs) => {
+    const { getByA11yLabel } = renderApi;
+    expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
+  },
+  successWithContent: async ({ renderApi, mockData }: TestCbArgs) => {
+    const { findByText, getByText } = renderApi;
+    expect(
+      await findByText(`${mockData.firstName} ${mockData.lastName}`),
+    ).toBeTruthy();
+    expect(getByText(`Team Colors: ${mockData.teamColor}`)).toBeTruthy();
+  },
+  successNoContent: async ({ renderApi }: TestCbArgs) => {
+    const { findByText } = renderApi;
+    expect(await findByText('Nothing Here!')).toBeTruthy();
+  },
+  error: async ({ renderApi }: TestCbArgs) => {
+    const { findByText } = renderApi;
+    expect(await findByText('Whoops! Something went wrong.')).toBeTruthy();
+  },
+});
 
-  const item = itemBuilder();
+describe('PlayerListScreen', () => {
+  const fetchMachine = createMachine<typeof machineConfig>(machineConfig);
   const fetchModel = createModel(
     fetchMachine.withConfig({
       guards: {
-        hasContent: () => true,
+        hasContent: (_, __, guardMeta) => guardMeta.state.event.hasContent,
       },
     }),
   ).withEvents({
     'done.invoke.PlayerListScreen.local.loading.fetching:invocation[0]': {
       exec: () => {},
+      cases: [{ hasContent: true }, { hasContent: false }],
     },
     'error.platform.PlayerListScreen.local.loading.fetching:invocation[0]': {
       exec: () => {},
     },
   });
 
+  const item = itemBuilder();
   const testPlans = fetchModel.getShortestPathPlans();
 
   testPlans.forEach((plan) => {
     describe(plan.description, () => {
       beforeEach(() => {
-        switch (plan.state.value) {
-          case 'successWithContent':
-            nock('http://localhost:9000').get('/items').reply(200, [item]);
-            break;
-          case 'successNoContent':
-            nock('http://localhost:9000').get('/items').reply(200, []);
-            break;
-          case 'error':
-            nock('http://localhost:9000')
-              .get('/items')
-              .reply(500, { error: { message: 'Something went wrong' } });
-            break;
+        if (plan.state.matches('local.successWithContent')) {
+          nock('http://localhost:9000').get('/items').reply(200, [item]);
+        } else if (plan.state.matches('local.successNoContent')) {
+          nock('http://localhost:9000').get('/items').reply(200, []);
+        } else if (plan.state.matches('local.error')) {
+          nock('http://localhost:9000')
+            .get('/items')
+            .reply(500, { error: { message: 'Something went wrong' } });
         }
       });
 

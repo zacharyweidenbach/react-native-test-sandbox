@@ -16,7 +16,7 @@ type TestCbArgs = {
   mockData: Item;
 };
 
-describe('PlayerDetailsScreen', () => {
+describe.skip('PlayerDetailsScreen', () => {
   const fetchMachine = createMachine(
     mergeMetaTests(machineConfig, {
       idle: async ({ renderApi }: TestCbArgs) => {

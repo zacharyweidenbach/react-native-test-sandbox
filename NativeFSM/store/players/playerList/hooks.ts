@@ -9,23 +9,26 @@ import {
 import { PlayerList, playerListQueryMachine } from '.';
 
 export const usePlayerListService = () => {
-  return useInterpret(playerListQueryMachine);
+  const service = useInterpret(playerListQueryMachine);
+  return service;
 };
 
 export const usePlayerListQuery = (
   playerListQueryService: InterpreterFrom<typeof playerListQueryMachine>,
 ) => {
-  return useMemo<QueryMethods<PlayerList>>(
+  const queryMethods = useMemo<QueryMethods<PlayerList>>(
     () => getQueryServiceMethods<PlayerList>(playerListQueryService),
     [playerListQueryService],
   );
+  return queryMethods;
 };
 
 export const usePlayerList = (
   playerListQueryService: InterpreterFrom<typeof playerListQueryMachine>,
 ) => {
-  return useSelector(
+  const result = useSelector(
     playerListQueryService,
     (state) => state.context.result as PlayerList | null,
   );
+  return result;
 };

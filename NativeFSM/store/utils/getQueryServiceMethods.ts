@@ -17,10 +17,10 @@ export type QueryMethods<T> = {
   getCurrentValue: () => T | null;
 };
 
-class Helper<T> {
+class QueryServiceHelper<T> {
   Return = queryMachineWithColdStoreFactory<T>({} as Options);
 }
-type QueryService<T> = InterpreterFrom<Helper<T>['Return']>;
+type QueryService<T> = InterpreterFrom<QueryServiceHelper<T>['Return']>;
 
 export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
   const initializeAsync = () => {
@@ -83,3 +83,9 @@ export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
     getCurrentValue: () => queryService.state.context.result as T,
   };
 };
+
+class GetQueryServiceMethodsHelper<T> {
+  Return = getQueryServiceMethods<T>({} as QueryService<T>);
+}
+export type GetQueryServiceMethods<T> =
+  GetQueryServiceMethodsHelper<T>['Return'];

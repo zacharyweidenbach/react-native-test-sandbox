@@ -1,35 +1,24 @@
 import React from 'react';
-import { interpret } from 'xstate';
 
 import { StoreContext } from '../../../store/store.provider';
-import { getQueryServiceMethods } from '../../../store/utils/getQueryServiceMethods';
-import { authQueryMachine } from '../../../store/auth';
 import { useAuthQuery, useAuth } from '../../../store/auth/hooks';
-import { playerListQueryMachine } from '../../../store/players/playerList';
 import {
   usePlayerListQuery,
   usePlayerList,
 } from '../../../store/players/playerList/hooks';
+import { getTestStoreHandler } from '../getTestStoreHandler';
 
 export const getTestStoreProvider = async () => {
-  const authInterpretedService = interpret(authQueryMachine).start();
-  const playerListInterpretedService = interpret(
-    playerListQueryMachine,
-  ).start();
-
-  const authQueryMethods = getQueryServiceMethods(authInterpretedService);
-  const playerListQueryMethods = getQueryServiceMethods(
-    playerListInterpretedService,
-  );
-
-  await authQueryMethods.initializeAsync();
-  await playerListQueryMethods.initializeAsync();
+  const testStoreHandler = getTestStoreHandler();
+  await testStoreHandler.startAndInitializeAllStores();
 
   return ({ children }: any) => {
-    const authQuery = useAuthQuery(authInterpretedService);
-    const auth = useAuth(authInterpretedService);
-    const playerListQuery = usePlayerListQuery(playerListInterpretedService);
-    const playerList = usePlayerList(playerListInterpretedService);
+    const authQuery = useAuthQuery(testStoreHandler.authQuery.service);
+    const auth = useAuth(testStoreHandler.authQuery.service);
+    const playerListQuery = usePlayerListQuery(
+      testStoreHandler.playerListQuery.service,
+    );
+    const playerList = usePlayerList(testStoreHandler.playerListQuery.service);
 
     return (
       <StoreContext.Provider
