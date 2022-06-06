@@ -1,5 +1,8 @@
 import { Item } from '../../../types';
-import { fetchMachine, defaultContext } from '../../../network/fetchMachine';
+import {
+  fetchPromiseFromFetchService,
+  getAuthedFetchService,
+} from '../../../network/utils';
 import { eventStreamFactory } from '../../utils/eventStreamFactory';
 import { subscriptionMachineFactory } from '../../utils/subscriptionMachineFactory';
 import { queryMachineFactory } from '../../utils/queryMachine';
@@ -21,7 +24,14 @@ export const playerListEventStreamHandler =
 
 export const playerListQueryMachine = queryMachineFactory<PlayerList>({
   id: 'playerListQueryMachine',
-  query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
+  query: () => {
+    return fetchPromiseFromFetchService(
+      getAuthedFetchService({
+        path: 'items',
+        method: 'GET',
+      }),
+    );
+  },
   staleTime: PLAYER_LIST_STALE_TIME,
   emitHandler: playerListEventStreamHandler,
 });

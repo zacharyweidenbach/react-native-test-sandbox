@@ -10,38 +10,43 @@ import { itemBuilder } from '../../../../../../test/mocks/item';
 import { Item } from '../../../../../../types';
 import { PlayerListScreen } from '.';
 import { machineConfig } from './machine';
+import { omit, set } from 'lodash';
 
 type TestCbArgs = {
   renderApi: RenderAPI;
   mockData: Item;
 };
 
-machineConfig.states.local = mergeMetaTests(machineConfig.states.local, {
-  loading: async ({ renderApi }: TestCbArgs) => {
-    const { getByA11yLabel } = renderApi;
-    expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
-  },
-  successWithContent: async ({ renderApi, mockData }: TestCbArgs) => {
-    const { findByText, getByText } = renderApi;
-    expect(
-      await findByText(`${mockData.firstName} ${mockData.lastName}`),
-    ).toBeTruthy();
-    expect(getByText(`Team Colors: ${mockData.teamColor}`)).toBeTruthy();
-  },
-  successNoContent: async ({ renderApi }: TestCbArgs) => {
-    const { findByText } = renderApi;
-    expect(await findByText('Nothing Here!')).toBeTruthy();
-  },
-  error: async ({ renderApi }: TestCbArgs) => {
-    const { findByText } = renderApi;
-    expect(await findByText('Whoops! Something went wrong.')).toBeTruthy();
-  },
-});
+const testMachineConfig = set(
+  omit(machineConfig, ['tsTypes', 'schema']),
+  'states.local',
+  mergeMetaTests(machineConfig.states.local, {
+    loading: async ({ renderApi }: TestCbArgs) => {
+      const { getByA11yLabel } = renderApi;
+      expect(getByA11yLabel('Loading Indicator')).toBeTruthy();
+    },
+    successWithContent: async ({ renderApi, mockData }: TestCbArgs) => {
+      const { findByText, getByText } = renderApi;
+      expect(
+        await findByText(`${mockData.firstName} ${mockData.lastName}`),
+      ).toBeTruthy();
+      expect(getByText(`Team Colors: ${mockData.teamColor}`)).toBeTruthy();
+    },
+    successNoContent: async ({ renderApi }: TestCbArgs) => {
+      const { findByText } = renderApi;
+      expect(await findByText('Nothing Here!')).toBeTruthy();
+    },
+    error: async ({ renderApi }: TestCbArgs) => {
+      const { findByText } = renderApi;
+      expect(await findByText('Whoops! Something went wrong.')).toBeTruthy();
+    },
+  }),
+);
 
 describe('PlayerListScreen', () => {
-  const fetchMachine = createMachine<typeof machineConfig>(machineConfig);
-  const fetchModel = createModel(
-    fetchMachine.withConfig({
+  const PlayerListScreenMachine = createMachine(testMachineConfig);
+  const PlayerListScreenModel = createModel(
+    PlayerListScreenMachine.withConfig({
       guards: {
         hasContent: (_, __, guardMeta) => guardMeta.state.event.hasContent,
       },
@@ -57,7 +62,7 @@ describe('PlayerListScreen', () => {
   });
 
   const item = itemBuilder();
-  const testPlans = fetchModel.getShortestPathPlans();
+  const testPlans = PlayerListScreenModel.getShortestPathPlans();
 
   testPlans.forEach((plan) => {
     describe(plan.description, () => {
@@ -88,7 +93,7 @@ describe('PlayerListScreen', () => {
   });
 
   it('should have full coverage', () => {
-    return fetchModel.testCoverage({
+    return PlayerListScreenModel.testCoverage({
       filter: (stateNode) =>
         stateNode.key !== 'evaluateResult' &&
         stateNode.key !== 'fetching' &&

@@ -6,6 +6,10 @@ import {
   usePlayerListQuery,
   usePlayerList,
 } from '../../../store/players/playerList/hooks';
+import {
+  usePlayerDetailQuery,
+  usePlayerDetail,
+} from '../../../store/players/playerDetail/hooks';
 import { getTestStoreHandler } from '../getTestStoreHandler';
 
 export const getTestStoreProvider = async () => {
@@ -19,6 +23,12 @@ export const getTestStoreProvider = async () => {
       testStoreHandler.playerListQuery.service,
     );
     const playerList = usePlayerList(testStoreHandler.playerListQuery.service);
+    const playerDetailQuery = usePlayerDetailQuery(
+      testStoreHandler.playerDetailQuery.service,
+    );
+    const playerDetail = usePlayerDetail(
+      testStoreHandler.playerDetailQuery.service,
+    );
 
     return (
       <StoreContext.Provider
@@ -27,6 +37,8 @@ export const getTestStoreProvider = async () => {
           auth,
           playerListQuery,
           playerList,
+          playerDetailQuery,
+          playerDetail,
         }}
       >
         {children}

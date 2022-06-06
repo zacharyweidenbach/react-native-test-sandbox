@@ -100,8 +100,7 @@ export const queryMachineFactory = <ResultType>(options: Options) =>
       actions: {
         storeResult: assign({
           result: (_, event) =>
-            (event as unknown as { data: { result: ResultType } }).data
-              ?.result ?? null,
+            (event as unknown as { data: ResultType }).data ?? null,
           updatedAt: (_) => new Date().getTime(),
         }),
         clearResult: assign({
