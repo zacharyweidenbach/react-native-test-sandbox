@@ -1,6 +1,24 @@
-import { createMachine } from 'xstate';
+import { useInterpret, useSelector } from '@xstate/react';
+import { createMachine, createSchema } from 'xstate';
+
+import { useStoreContext } from '../store/store.provider';
 
 export const machineConfig = {
+  tsTypes: {} as import('./primaryMachine.typegen').Typegen0,
+  schema: {
+    events: createSchema<{ type: 'LOGIN' | 'LOGOUT' | 'always' }>(),
+    services: createSchema<{
+      bootstrap: {
+        data: any;
+      };
+      login: {
+        data: any;
+      };
+      logout: {
+        data: any;
+      };
+    }>(),
+  },
   id: 'PrimaryMachine',
   context: {},
   initial: 'bootstrapping',
@@ -44,24 +62,58 @@ export const machineConfig = {
   },
 };
 
-export const primaryMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QAUBOBLAtgQ1QTwFlsBjAC3QDswA6SkgF3QDcwBiAQQGEAVASQDV23AKKJQABwD2sdI0kUxIAB6IA7AA5q6gJwBWAAzqAjAGYjugwBYjAGhB5EAJksnqANg-aT2x7vNvVEzcAX2C7NCxcQhJyKmoAI0lJelh6VGxxcUooVgh5GkomSQBrGgicfCIyShpE5NT0zOyEQslibDkKAG19AF1FKRlOxRUEZzdqXVVnS3U3FzdtQzsHBBNLCeNVI0dPdV1FkLCQcqiq2JoyMGJi9gBXelJWAelZdHkRxBdHdwDVfV02iMATc6lUK0Q5lcYMc+hMjn2QMMHlC4QwFWi1TiABtJFAoNleBRcvlaBQiqVqKdKjEatRcfjCRQWuS2h13t0+i8hhzPghpj8kdp1JZVF59upHBC1vp9JN5kYgdptBt9Ko3LpUSd0WdaTi8QSKFAiawwKhUJJUNRxNiOgAzS2YKk6mlYmgMw3G5mtdqdHr9JAgQZvD6B0Y6H7eBEmXTWNxBIzg+yIEyy+XWJUqtxq1Ra6mYi70g3ZADyDxJcValPz5zpHtLDxZRV9HP93JDCjDkLVEx2cMss0cGmFUuTazB1BVRlFqhnseneZdBbp2AepDAFEYvsgrAAMiWAOIlgCq3Hbwy7CCWRncBg8+0VQLc0thui0030zl0Cfh6kXkVdQs7goVdHg3LcOh3fcD14AA5c9eUvSxtFUahZ10SV-mMOEgWlSxAS0SxHEVRxHD0DVARMUJjgoSQIDgRQaz1AoQOIRgWAQ0NQFGIjpWnVCTA-R8dl8QIjH-DFaziOoUjSDIsiNTjO24lM3zmExJVI4Us20Z8xzMSwtETUxLH0XTVH+IIJN1N1qCuG57keJS+WcVCXF0ocML0Yjpz40VqEE2FhNIqYzGswC62LI0iWcy9LMmQEiIwg5zDFPCh0I4j1BFbYfBmcLl31RkjTLehYpUhAjABCZ1WyzyvEMdQ+MCd9FTBHDFSqzVjiY2zQPXTd0G3CByuURBDknHQqqMKqETBJqx0fAKhPMCNjFFAqpJoYD+vAobIJGwNgwvCqB0M8xhTmfQjH2AIvGlDSbwHad5m-fRFllSxNuY0bRhmrR400sidA2PQk1WWdlthawiI2OZhWo4IgA */
-  createMachine({
-    tsTypes: {} as import('./primaryMachine.typegen').Typegen0,
-    schema: {
-      context: {} as {},
-      events: {} as { type: 'LOGIN' | 'LOGOUT' | 'always' },
-      services: {} as {
-        bootstrap: {
-          data: any;
-        };
-        login: {
-          data: any;
-        };
-        logout: {
-          data: any;
-        };
+export const primaryMachine = createMachine(machineConfig);
+
+export const usePrimaryMachine = () => {
+  const queryManagers = useStoreContext();
+  const primaryService = useInterpret(primaryMachine, {
+    services: {
+      bootstrap: async () => {
+        for (const key of Object.keys(queryManagers)) {
+          await queryManagers[
+            key as keyof typeof queryManagers
+          ].methods.initializeAsync();
+        }
+      },
+      login: async () => Promise.resolve(null),
+      logout: async () => {
+        for (const key of Object.keys(queryManagers)) {
+          await queryManagers[
+            key as keyof typeof queryManagers
+          ].methods.resetAsync();
+        }
       },
     },
-    ...machineConfig,
+    guards: {
+      isAuthenticated: () =>
+        Boolean(queryManagers.accessToken.methods.getCurrentValue()),
+      // isAuthenticated: () => true,
+    },
   });
+
+  const isBootstrapping = useSelector(primaryService, (state) =>
+    state.matches('bootstrapping'),
+  );
+  const isLoggingIn = useSelector(primaryService, (state) =>
+    state.matches('loggingIn'),
+  );
+  const isLoggingOut = useSelector(primaryService, (state) =>
+    state.matches('loggingOut'),
+  );
+  const isAuthenticated = useSelector(primaryService, (state) =>
+    state.matches('authenticated'),
+  );
+  const isUnauthenticated = useSelector(primaryService, (state) =>
+    state.matches('unauthenticated'),
+  );
+
+  return {
+    isBootstrapping,
+    isLoggingIn,
+    isLoggingOut,
+    isAuthenticated,
+    isUnauthenticated,
+    handleLogin: () => primaryService.send('LOGIN'),
+    handleLogout: () => primaryService.send('LOGOUT'),
+  };
+};
