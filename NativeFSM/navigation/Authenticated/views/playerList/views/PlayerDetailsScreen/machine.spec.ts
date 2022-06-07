@@ -2,57 +2,113 @@ import { interpret } from 'xstate';
 import nock from 'nock';
 
 import { itemBuilder } from '../../../../../../test/mocks/item';
-import { PlayerDetailsScreenMachine } from './machine';
+import { PlayerDetailScreenMachine } from './machine';
+import { playerDetailQueryMachine } from '../../../../../../store/players/playerDetail';
+import { getQueryServiceMethods } from '../../../../../../store/utils/getQueryServiceMethods';
+import { Item } from '../../../../../../types';
 
-describe.skip('PlayerDetailsScreenMachine', () => {
+const testSetup = async (item: Item) => {
+  const playerDetailService = interpret(playerDetailQueryMachine).start();
+  const playerDetailQuery = getQueryServiceMethods(playerDetailService);
+  await playerDetailQuery.initializeAsync();
+
+  const playerDetailScreenService = interpret(
+    PlayerDetailScreenMachine.withContext({ playerId: item.id }).withConfig({
+      services: {
+        playerDetailQuery: (context) =>
+          playerDetailQuery.queryAsync({ playerId: context.playerId }),
+      },
+    }),
+  );
+
+  return { playerDetailQuery, playerDetailService, playerDetailScreenService };
+};
+
+describe('PlayerDetailScreenMachine', () => {
   afterEach(async () => {
     nock.cleanAll();
   });
 
-  it('should eventually reach loading', (done) => {
+  it('should eventually reach loading', async (done) => {
     const item = itemBuilder();
-    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
-    const fetchService = interpret(PlayerDetailsScreenMachine).onTransition(
-      (state) => {
-        if (state.matches('loading')) {
-          done();
-        }
-      },
+    const { playerDetailService, playerDetailScreenService } = await testSetup(
+      item,
     );
+    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
 
-    fetchService.start();
-    fetchService.send({ type: 'FETCH', id: item.id });
+    playerDetailScreenService.onTransition((state) => {
+      if (state.matches('loading')) {
+        playerDetailService.stop();
+        playerDetailScreenService.stop();
+        done();
+      }
+    });
+
+    playerDetailScreenService.start();
   });
 
-  it('should eventually reach success', (done) => {
+  it('should eventually reach success', async (done) => {
     const item = itemBuilder();
-    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
-    const fetchService = interpret(PlayerDetailsScreenMachine).onTransition(
-      (state) => {
-        if (state.matches('success')) {
-          done();
-        }
-      },
+    const { playerDetailService, playerDetailScreenService } = await testSetup(
+      item,
     );
+    nock('http://localhost:9000').get(`/items/${item.id}`).reply(200, item);
 
-    fetchService.start();
-    fetchService.send({ type: 'FETCH', id: item.id });
+    playerDetailScreenService.onTransition((state) => {
+      if (state.matches('success')) {
+        playerDetailService.stop();
+        playerDetailScreenService.stop();
+        done();
+      }
+    });
+
+    playerDetailScreenService.start();
   });
 
-  it('should eventually reach error', (done) => {
+  it('should eventually reach error', async (done) => {
     const item = itemBuilder();
+    const { playerDetailService, playerDetailScreenService } = await testSetup(
+      item,
+    );
     nock('http://localhost:9000')
       .get(`/items/${item.id}`)
       .reply(500, { error: { message: 'Something went wrong' } });
-    const fetchService = interpret(PlayerDetailsScreenMachine).onTransition(
-      (state) => {
-        if (state.matches('error')) {
-          done();
-        }
-      },
-    );
 
-    fetchService.start();
-    fetchService.send({ type: 'FETCH', id: item.id });
+    playerDetailScreenService.onTransition((state) => {
+      if (state.matches('error')) {
+        playerDetailService.stop();
+        playerDetailScreenService.stop();
+        done();
+      }
+    });
+
+    playerDetailScreenService.start();
+  });
+
+  it('should reload on playerDetail reset', async (done) => {
+    const item = itemBuilder();
+    nock('http://localhost:9000')
+      .persist()
+      .get(`/items/${item.id}`)
+      .reply(200, item);
+    const {
+      playerDetailQuery,
+      playerDetailService,
+      playerDetailScreenService,
+    } = await testSetup(item);
+
+    let hasReachedSuccessBefore = false;
+    playerDetailScreenService.onTransition((state) => {
+      if (state.matches('success') && !hasReachedSuccessBefore) {
+        hasReachedSuccessBefore = true;
+        playerDetailQuery.reset();
+      } else if (state.matches('success') && hasReachedSuccessBefore) {
+        playerDetailService.stop();
+        playerDetailScreenService.stop();
+        done();
+      }
+    });
+
+    playerDetailScreenService.start();
   });
 });

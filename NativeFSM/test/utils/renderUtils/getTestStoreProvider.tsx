@@ -27,12 +27,12 @@ export const getTestStoreProvider = async (options: Options) => {
       testStoreHandler.playerListQuery.service,
     );
     const playerList = usePlayerList(testStoreHandler.playerListQuery.service);
-    // const playerDetailQuery = usePlayerDetailQuery(
-    //   testStoreHandler.playerDetailQuery.service,
-    // );
-    // const playerDetail = usePlayerDetail(
-    //   testStoreHandler.playerDetailQuery.service,
-    // );
+    const playerDetailQuery = usePlayerDetailQuery(
+      testStoreHandler.playerDetailQuery.service,
+    );
+    const playerDetail = usePlayerDetail(
+      testStoreHandler.playerDetailQuery.service,
+    );
 
     return (
       <StoreContext.Provider
@@ -41,8 +41,8 @@ export const getTestStoreProvider = async (options: Options) => {
           auth,
           playerListQuery,
           playerList,
-          // playerDetailQuery,
-          // playerDetail,
+          playerDetailQuery,
+          playerDetail,
         }}
       >
         {children}

@@ -26,6 +26,7 @@ export type Events =
   | { type: 'PLAYER_LIST.SUCCESS' }
   | { type: 'PLAYER_LIST.ERROR' }
   | { type: 'PLAYER_LIST.RESET' };
+export type PlayerListArgs = undefined;
 const eventBus = new EventBus<Events>(ID);
 export const playerListSubscription = {
   id: ID,

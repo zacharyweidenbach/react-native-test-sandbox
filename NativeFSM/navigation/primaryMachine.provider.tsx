@@ -15,17 +15,19 @@ const PrimaryMachineContext = createContext<{
 }>({} as any);
 
 export const PrimaryMachineProvider: FC = ({ children }) => {
-  const { authQuery, playerListQuery } = useStoreContext();
+  const { authQuery, playerListQuery, playerDetailQuery } = useStoreContext();
   const primaryService = useInterpret(primaryMachine, {
     services: {
       bootstrap: async () => {
         await authQuery.initializeAsync();
         await playerListQuery.initializeAsync();
+        await playerDetailQuery.initializeAsync();
       },
       login: async () => Promise.resolve(null),
       logout: async () => {
         await authQuery.resetAsync();
         await playerListQuery.resetAsync();
+        await playerDetailQuery.resetAsync();
       },
     },
     guards: {

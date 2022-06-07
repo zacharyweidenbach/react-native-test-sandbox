@@ -6,7 +6,7 @@ import {
   getQueryServiceMethods,
   QueryMethods,
 } from '../../utils/getQueryServiceMethods';
-import { Player, playerDetailQueryMachine } from '.';
+import { Player, playerDetailQueryMachine, PlayerDetailArgs } from '.';
 
 export const usePlayerDetailService = () => {
   const service = useInterpret(playerDetailQueryMachine);
@@ -16,8 +16,11 @@ export const usePlayerDetailService = () => {
 export const usePlayerDetailQuery = (
   playerDetailQueryService: InterpreterFrom<typeof playerDetailQueryMachine>,
 ) => {
-  const queryMethods = useMemo<QueryMethods<Player>>(
-    () => getQueryServiceMethods<Player>(playerDetailQueryService),
+  const queryMethods = useMemo<QueryMethods<Player, PlayerDetailArgs>>(
+    () =>
+      getQueryServiceMethods<Player, PlayerDetailArgs>(
+        playerDetailQueryService,
+      ),
     [playerDetailQueryService],
   );
   return queryMethods;

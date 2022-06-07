@@ -21,7 +21,9 @@ export type Config = {
   };
 };
 
-export const queryMachineWithColdStoreFactory = <ResultType>(config: Config) =>
+export const queryMachineWithColdStoreFactory = <ResultType, Arguments>(
+  config: Config,
+) =>
   createMachine(
     {
       id: config.id,
