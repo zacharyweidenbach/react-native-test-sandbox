@@ -1,35 +1,29 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine, send } from 'xstate';
 
 import { addMinutes, isPast } from 'date-fns';
 
-export type ColdStorage<T> = {
-  data: T;
-  updatedAt: number;
-};
-
-export type Options = {
+export type Config = {
   id: string;
   query: any;
   staleTime: number;
-  emitHandler: {
-    emitInitialized: () => void;
-    emitLoading: () => void;
-    emitSuccess: () => void;
-    emitError: () => void;
-    emitReset: () => void;
+  eventPrefix: string;
+  eventBusConfig: {
+    id: string;
+    src: any;
   };
 };
 
-export const queryMachineFactory = <ResultType>(options: Options) =>
+export const queryMachineFactory = <ResultType>(config: Config) =>
   createMachine(
     {
-      id: options.id,
+      id: config.id,
       initial: 'inactive',
       context: {
         error: null as Error | null,
         updatedAt: null as number | null,
         result: null as ResultType | null,
       },
+      invoke: config.eventBusConfig,
       states: {
         inactive: {
           on: {
@@ -52,7 +46,7 @@ export const queryMachineFactory = <ResultType>(options: Options) =>
         querying: {
           entry: 'notifyLoading',
           invoke: {
-            src: options.query,
+            src: config.query,
             onDone: {
               target: 'success',
               actions: ['storeResult', 'clearError'],
@@ -113,16 +107,31 @@ export const queryMachineFactory = <ResultType>(options: Options) =>
         clearError: assign({
           error: (_context, _event) => null,
         }),
-        notifyInitialized: () => options.emitHandler.emitInitialized(),
-        notifyLoading: () => options.emitHandler.emitLoading(),
-        notifySuccess: () => options.emitHandler.emitSuccess(),
-        notifyError: () => options.emitHandler.emitError(),
-        notifyReset: () => options.emitHandler.emitReset(),
+        notifyInitialized: send(
+          { type: `${config.eventPrefix}.INITIALIZED` },
+          { to: config.eventBusConfig.id },
+        ),
+        notifyLoading: send(
+          { type: `${config.eventPrefix}.LOADING` },
+          { to: config.eventBusConfig.id },
+        ),
+        notifySuccess: send(
+          { type: `${config.eventPrefix}.SUCCESS` },
+          { to: config.eventBusConfig.id },
+        ),
+        notifyError: send(
+          { type: `${config.eventPrefix}.ERROR` },
+          { to: config.eventBusConfig.id },
+        ),
+        notifyReset: send(
+          { type: `${config.eventPrefix}.RESET` },
+          { to: config.eventBusConfig.id },
+        ),
       },
       guards: {
         hasStaleResult: (context) => {
           if (context.updatedAt) {
-            return isPast(addMinutes(context.updatedAt, options.staleTime));
+            return isPast(addMinutes(context.updatedAt, config.staleTime));
           } else {
             return false;
           }

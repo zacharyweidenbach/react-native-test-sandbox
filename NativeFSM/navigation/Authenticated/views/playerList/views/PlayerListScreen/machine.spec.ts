@@ -17,7 +17,7 @@ const initializePlayerListService = async () => {
   const playerListQuery = getQueryServiceMethods(playerListService);
   await playerListQuery.initializeAsync();
 
-  return playerListQuery;
+  return { playerListQuery, playerListService };
 };
 
 const getPlayerListScreenService = (
@@ -48,11 +48,14 @@ describe('PlayerListScreenMachine', () => {
 
   it('should eventually reach loading', async (done) => {
     nock('http://localhost:9000').get('/items').reply(200, []);
-    const playerListQuery = await initializePlayerListService();
+    const { playerListQuery, playerListService } =
+      await initializePlayerListService();
     const playerListScreenService = getPlayerListScreenService(playerListQuery);
 
     playerListScreenService.onTransition((state) => {
-      if (state.matches('local.loading')) {
+      if (state.matches('loading')) {
+        playerListScreenService.stop();
+        playerListService.stop();
         done();
       }
     });
@@ -63,10 +66,13 @@ describe('PlayerListScreenMachine', () => {
   it('should eventually reach successWithContent', async (done) => {
     const item = itemBuilder();
     nock('http://localhost:9000').get('/items').reply(200, [item]);
-    const playerListQuery = await initializePlayerListService();
+    const { playerListQuery, playerListService } =
+      await initializePlayerListService();
     const playerListScreenService = getPlayerListScreenService(playerListQuery);
     playerListScreenService.onTransition((state) => {
-      if (state.matches('local.successWithContent')) {
+      if (state.matches('successWithContent')) {
+        playerListScreenService.stop();
+        playerListService.stop();
         done();
       }
     });
@@ -76,10 +82,13 @@ describe('PlayerListScreenMachine', () => {
 
   it('should eventually reach successNoContent', async (done) => {
     nock('http://localhost:9000').get('/items').reply(200, []);
-    const playerListQuery = await initializePlayerListService();
+    const { playerListQuery, playerListService } =
+      await initializePlayerListService();
     const playerListScreenService = getPlayerListScreenService(playerListQuery);
     playerListScreenService.onTransition((state) => {
-      if (state.matches('local.successNoContent')) {
+      if (state.matches('successNoContent')) {
+        playerListScreenService.stop();
+        playerListService.stop();
         done();
       }
     });
@@ -92,10 +101,13 @@ describe('PlayerListScreenMachine', () => {
       .persist()
       .get('/items')
       .reply(500, { error: { message: 'Something went wrong' } });
-    const playerListQuery = await initializePlayerListService();
+    const { playerListQuery, playerListService } =
+      await initializePlayerListService();
     const playerListScreenService = getPlayerListScreenService(playerListQuery);
     playerListScreenService.onTransition((state) => {
-      if (state.matches('local.error')) {
+      if (state.matches('error')) {
+        playerListScreenService.stop();
+        playerListService.stop();
         done();
       }
     });
@@ -106,21 +118,24 @@ describe('PlayerListScreenMachine', () => {
   it('should reload on playerList reset', async (done) => {
     const item = itemBuilder();
     nock('http://localhost:9000').persist().get('/items').reply(200, [item]);
-    const playerListQuery = await initializePlayerListService();
+    const { playerListQuery, playerListService } =
+      await initializePlayerListService();
     const playerListScreenService = getPlayerListScreenService(playerListQuery);
 
     let hasReachedSuccessWithContentBefore = false;
     playerListScreenService.onTransition((state) => {
       if (
-        state.matches('local.successWithContent') &&
+        state.matches('successWithContent') &&
         !hasReachedSuccessWithContentBefore
       ) {
         hasReachedSuccessWithContentBefore = true;
         playerListQuery.reset();
       } else if (
-        state.matches('local.successWithContent') &&
+        state.matches('successWithContent') &&
         hasReachedSuccessWithContentBefore
       ) {
+        playerListScreenService.stop();
+        playerListService.stop();
         done();
       }
     });

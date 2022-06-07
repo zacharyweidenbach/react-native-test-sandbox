@@ -24,12 +24,10 @@ const getTestQueryService = (
       storageKey: TEST_KEY,
       query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
       staleTime: STALE_TIME_IN_MINUTES,
-      emitHandler: {
-        emitInitialized: () => {},
-        emitLoading: () => {},
-        emitSuccess: () => {},
-        emitError: () => {},
-        emitReset: () => {},
+      eventPrefix: 'TEST',
+      eventBusConfig: {
+        id: 'TEST_EVENT_BUS',
+        src: () => () => {},
       },
     }),
   );

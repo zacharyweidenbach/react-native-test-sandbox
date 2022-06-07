@@ -1,7 +1,8 @@
 import { useInterpret, useSelector } from '@xstate/react';
 import {
   playerListEvents,
-  playerListSubscriptionMachine,
+  playerListSubscription,
+  Events,
 } from '../../../../../../store/players/playerList';
 import { createMachine, createSchema } from 'xstate';
 
@@ -10,7 +11,7 @@ import { useStoreContext } from '../../../../../../store/store.provider';
 export const machineConfig = {
   tsTypes: {} as import('./machine.typegen').Typegen0,
   schema: {
-    events: createSchema<{ type: 'always' }>(),
+    events: createSchema<Events>(),
     services: createSchema<{
       playerListQuery: {
         data: any;
@@ -18,41 +19,37 @@ export const machineConfig = {
     }>(),
   },
   id: 'PlayerListScreen',
-  type: 'parallel' as const,
-  initial: 'fetching',
+  initial: 'loading',
   states: {
-    local: {
-      initial: 'loading',
+    loading: {
+      initial: 'fetching',
       states: {
-        loading: {
-          initial: 'fetching',
-          states: {
-            fetching: {
-              invoke: {
-                src: 'playerListQuery',
-                onDone: 'evaluateResult',
-                onError: '#PlayerListScreen.local.error',
-              },
-            },
-            evaluateResult: {
-              always: [
-                {
-                  target: '#PlayerListScreen.local.successWithContent',
-                  cond: 'hasContent',
-                },
-                { target: '#PlayerListScreen.local.successNoContent' },
-              ],
-            },
+        fetching: {
+          invoke: {
+            src: 'playerListQuery',
+            onDone: 'evaluateResult',
+            onError: '#PlayerListScreen.error',
           },
         },
-        successWithContent: { type: 'final' as const },
-        successNoContent: { type: 'final' as const },
-        error: { type: 'final' as const },
+        evaluateResult: {
+          always: [
+            {
+              target: '#PlayerListScreen.successWithContent',
+              cond: 'hasContent',
+            },
+            { target: '#PlayerListScreen.successNoContent' },
+          ],
+        },
       },
     },
-    playerListSubscriber: { invoke: playerListSubscriptionMachine },
+    successWithContent: {},
+    successNoContent: {},
+    error: {},
   },
-  on: { [playerListEvents.RESET]: 'local.loading' },
+  invoke: playerListSubscription,
+  on: {
+    [playerListEvents.RESET]: 'loading',
+  },
 };
 
 export const PlayerListScreenMachine = createMachine(machineConfig);
@@ -77,10 +74,10 @@ export const usePlayerListScreenMachine = () => {
   });
 
   const isLoading = useSelector(playerListScreenService, (state) =>
-    state.matches('local.loading'),
+    state.matches('loading'),
   );
   const isError = useSelector(playerListScreenService, (state) =>
-    state.matches('local.error'),
+    state.matches('error'),
   );
 
   return { isLoading, isError };

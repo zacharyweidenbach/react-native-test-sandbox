@@ -12,8 +12,12 @@ import {
 } from '../../../store/players/playerDetail/hooks';
 import { getTestStoreHandler } from '../getTestStoreHandler';
 
-export const getTestStoreProvider = async () => {
-  const testStoreHandler = getTestStoreHandler();
+type Options = {
+  testStoreHandler?: ReturnType<typeof getTestStoreHandler>;
+};
+
+export const getTestStoreProvider = async (options: Options) => {
+  const testStoreHandler = options.testStoreHandler || getTestStoreHandler();
   await testStoreHandler.startAndInitializeAllStores();
 
   return ({ children }: any) => {
@@ -23,12 +27,12 @@ export const getTestStoreProvider = async () => {
       testStoreHandler.playerListQuery.service,
     );
     const playerList = usePlayerList(testStoreHandler.playerListQuery.service);
-    const playerDetailQuery = usePlayerDetailQuery(
-      testStoreHandler.playerDetailQuery.service,
-    );
-    const playerDetail = usePlayerDetail(
-      testStoreHandler.playerDetailQuery.service,
-    );
+    // const playerDetailQuery = usePlayerDetailQuery(
+    //   testStoreHandler.playerDetailQuery.service,
+    // );
+    // const playerDetail = usePlayerDetail(
+    //   testStoreHandler.playerDetailQuery.service,
+    // );
 
     return (
       <StoreContext.Provider
@@ -37,8 +41,8 @@ export const getTestStoreProvider = async () => {
           auth,
           playerListQuery,
           playerList,
-          playerDetailQuery,
-          playerDetail,
+          // playerDetailQuery,
+          // playerDetail,
         }}
       >
         {children}

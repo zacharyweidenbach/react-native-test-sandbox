@@ -1,7 +1,7 @@
 import { InterpreterFrom } from 'xstate';
 
 import {
-  Options,
+  Config,
   queryMachineWithColdStoreFactory,
 } from './queryMachineWithColdStorage';
 
@@ -18,7 +18,7 @@ export type QueryMethods<T> = {
 };
 
 class QueryServiceHelper<T> {
-  Return = queryMachineWithColdStoreFactory<T>({} as Options);
+  Return = queryMachineWithColdStoreFactory<T>({} as Config);
 }
 type QueryService<T> = InterpreterFrom<QueryServiceHelper<T>['Return']>;
 

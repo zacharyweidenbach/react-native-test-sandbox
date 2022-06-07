@@ -3,9 +3,9 @@ import {
   fetchPromiseFromFetchService,
   getAuthedFetchService,
 } from '../../../network/utils';
-import { eventStreamFactory } from '../../utils/eventStreamFactory';
-import { subscriptionMachineFactory } from '../../utils/subscriptionMachineFactory';
 import { queryMachineFactory } from '../../utils/queryMachine';
+import { fromEventBus } from '../../../utils/xstate/fromEventBus';
+import { EventBus } from '../../../utils/xstate/EventBus';
 
 export const PLAYER_DETAIL_STALE_TIME = 30;
 
@@ -19,8 +19,12 @@ export const playerDetailEvents = {
   RESET: 'PLAYER_DETAIL.RESET',
 };
 
-export const playerDetailEventStreamHandler =
-  eventStreamFactory(playerDetailEvents);
+const ID = 'PLAYER_DETAIL';
+const eventBus = new EventBus(ID);
+export const playerDetailSubscription = {
+  id: ID,
+  src: fromEventBus(() => eventBus),
+};
 
 export const playerDetailQueryMachine = queryMachineFactory<Player>({
   id: 'PlayerDetailQueryMachine',
@@ -33,11 +37,6 @@ export const playerDetailQueryMachine = queryMachineFactory<Player>({
     );
   },
   staleTime: PLAYER_DETAIL_STALE_TIME,
-  emitHandler: playerDetailEventStreamHandler,
-});
-
-export const playerDetailSubscriptionMachine = subscriptionMachineFactory({
-  id: 'playerDetailSubscriptionMachine',
-  events: playerDetailEvents,
-  eventStream: playerDetailEventStreamHandler.eventStream,
+  eventPrefix: ID,
+  eventBusConfig: playerDetailSubscription,
 });

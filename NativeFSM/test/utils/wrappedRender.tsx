@@ -3,10 +3,12 @@ import { render, RenderOptions } from '@testing-library/react-native';
 
 import { MockedNavigator } from './renderUtils/MockedNavigator';
 import { getTestWrapper } from './renderUtils/getTestWrapper';
+import { getTestStoreHandler } from './getTestStoreHandler';
 
 type WrappedRenderOptions = {
   initialParams?: { [key: string]: any };
   renderOptions?: RenderOptions;
+  testStoreHandler?: ReturnType<typeof getTestStoreHandler>;
 };
 
 const defaultOptions = {

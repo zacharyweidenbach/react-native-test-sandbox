@@ -4,73 +4,62 @@ import nock from 'nock';
 import { itemBuilder } from '../../../test/mocks/item';
 import { getQueryServiceMethods } from '../../utils/getQueryServiceMethods';
 import { StoreInterface } from '../../utils/StoreRepository/StoreInterface';
-import { eventStreamFactory } from '../eventStreamFactory';
 import { Item } from '../../../types';
 import { queryMachineWithColdStoreFactory } from '.';
 import { storeRepository } from '../StoreRepository';
 import { defaultContext, fetchMachine } from '../../../network/fetchMachine';
-import { subscriptionMachineFactory } from '../subscriptionMachineFactory';
+import { EventBus } from '../../../utils/xstate/EventBus';
+import { fromEventBus } from '../../../utils/xstate/fromEventBus';
 
 const TEST_STORE_KEY = 'test';
 const TEST_STALE_TIME = 30;
 
 type Test = Item[];
 
-const events = {
-  INITIALIZED: 'TEST.INITIALIZED',
-  LOADING: 'TEST.LOADING',
-  SUCCESS: 'TEST.SUCCESS',
-  ERROR: 'TEST.ERROR',
-  RESET: 'TEST.RESET',
-};
+const getTestMachines = () => {
+  const ID = 'TEST';
+  const eventBus = new EventBus('EV');
+  const testEventBusConfig = {
+    id: ID,
+    src: fromEventBus(() => eventBus),
+  };
 
-const testEventStreamHandler = eventStreamFactory(events);
+  const testQueryMachine = queryMachineWithColdStoreFactory<Test>({
+    storeRepository,
+    id: 'testQueryMachine',
+    storageKey: TEST_STORE_KEY,
+    query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
+    staleTime: TEST_STALE_TIME,
+    eventPrefix: ID,
+    eventBusConfig: testEventBusConfig,
+  });
 
-const testQueryMachine = queryMachineWithColdStoreFactory<Test>({
-  storeRepository,
-  id: 'testQueryMachine',
-  storageKey: TEST_STORE_KEY,
-  query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
-  staleTime: TEST_STALE_TIME,
-  emitHandler: testEventStreamHandler,
-});
-
-const testSubscriptionMachine = subscriptionMachineFactory({
-  id: 'testSubscriptionMachine',
-  events,
-  eventStream: testEventStreamHandler.eventStream,
-});
-
-const UIMachine = createMachine({
-  id: 'UIMachine',
-  type: 'parallel',
-  states: {
-    local: {
-      initial: 'idle',
-      states: {
-        idle: {
-          on: { START: 'loading' },
-        },
-        loading: {
-          invoke: {
-            src: 'queryAsync',
-            onDone: 'success',
-            onError: 'error',
-          },
-          on: {
-            SUCCESS: 'success',
-          },
-        },
-        success: {},
-        error: {},
+  const UIMachine = createMachine({
+    id: 'UIMachine',
+    invoke: testEventBusConfig,
+    initial: 'idle',
+    states: {
+      idle: {
+        on: { START: 'loading' },
       },
+      loading: {
+        invoke: {
+          src: 'queryAsync',
+          onDone: 'success',
+          onError: 'error',
+        },
+        on: {
+          SUCCESS: 'success',
+        },
+      },
+      success: {},
+      error: {},
     },
-    query: {
-      invoke: testSubscriptionMachine,
-    },
-  },
-  on: { [events.RESET]: 'local.idle' },
-});
+    on: { [`${ID}.RESET`]: 'idle' },
+  });
+
+  return { testQueryMachine, UIMachine };
+};
 
 describe('subscription', () => {
   afterEach(async () => {
@@ -79,6 +68,7 @@ describe('subscription', () => {
   });
 
   it('should wait until data is fetched before transitioning to success', async (done) => {
+    const { testQueryMachine, UIMachine } = getTestMachines();
     const item = itemBuilder();
     nock('http://localhost:9000').get('/items').reply(200, [item]);
 
@@ -94,7 +84,7 @@ describe('subscription', () => {
     );
 
     UIServer.onTransition((state) => {
-      if (state.matches('local.success')) {
+      if (state.matches('success')) {
         expect(getCurrentValue()).toEqual([item]);
         done();
       }
@@ -110,6 +100,7 @@ describe('subscription', () => {
       .get('/items')
       .reply(500, { error: { message: 'Something went wrong' } });
 
+    const { testQueryMachine, UIMachine } = getTestMachines();
     const testQueryService = interpret(testQueryMachine);
     const { initializeAsync, queryAsync } =
       getQueryServiceMethods<Test>(testQueryService);
@@ -122,7 +113,7 @@ describe('subscription', () => {
     );
 
     UIServer.onTransition((state) => {
-      if (state.matches('local.error')) {
+      if (state.matches('error')) {
         done();
       }
     });
@@ -135,6 +126,7 @@ describe('subscription', () => {
     const item = itemBuilder();
     nock('http://localhost:9000').get('/items').reply(200, [item]);
 
+    const { testQueryMachine, UIMachine } = getTestMachines();
     const testQueryService = interpret(testQueryMachine);
     const { initializeAsync, queryAsync, reset, getCurrentValue } =
       getQueryServiceMethods<Test>(testQueryService);
@@ -148,12 +140,12 @@ describe('subscription', () => {
 
     let hasSucceededBefore = false;
     UIServer.onTransition((state) => {
-      if (state.matches('local.success')) {
+      if (state.matches('success')) {
         hasSucceededBefore = true;
         reset();
       }
 
-      if (state.matches('local.idle') && hasSucceededBefore) {
+      if (state.matches('idle') && hasSucceededBefore) {
         expect(getCurrentValue()).toBeNull();
         done();
       }

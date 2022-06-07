@@ -3,9 +3,9 @@ import {
   fetchPromiseFromFetchService,
   getAuthedFetchService,
 } from '../../../network/utils';
-import { eventStreamFactory } from '../../utils/eventStreamFactory';
-import { subscriptionMachineFactory } from '../../utils/subscriptionMachineFactory';
 import { queryMachineFactory } from '../../utils/queryMachine';
+import { fromEventBus } from '../../../utils/xstate/fromEventBus';
+import { EventBus } from '../../../utils/xstate/EventBus';
 
 export const PLAYER_LIST_STALE_TIME = 30;
 
@@ -19,8 +19,18 @@ export const playerListEvents = {
   RESET: 'PLAYER_LIST.RESET',
 };
 
-export const playerListEventStreamHandler =
-  eventStreamFactory(playerListEvents);
+const ID = 'PLAYER_LIST';
+export type Events =
+  | { type: 'PLAYER_LIST.INITIALIZED' }
+  | { type: 'PLAYER_LIST.LOADING' }
+  | { type: 'PLAYER_LIST.SUCCESS' }
+  | { type: 'PLAYER_LIST.ERROR' }
+  | { type: 'PLAYER_LIST.RESET' };
+const eventBus = new EventBus<Events>(ID);
+export const playerListSubscription = {
+  id: ID,
+  src: fromEventBus(() => eventBus),
+};
 
 export const playerListQueryMachine = queryMachineFactory<PlayerList>({
   id: 'playerListQueryMachine',
@@ -33,11 +43,6 @@ export const playerListQueryMachine = queryMachineFactory<PlayerList>({
     );
   },
   staleTime: PLAYER_LIST_STALE_TIME,
-  emitHandler: playerListEventStreamHandler,
-});
-
-export const playerListSubscriptionMachine = subscriptionMachineFactory({
-  id: 'playerListSubscriptionMachine',
-  events: playerListEvents,
-  eventStream: playerListEventStreamHandler.eventStream,
+  eventPrefix: ID,
+  eventBusConfig: playerListSubscription,
 });

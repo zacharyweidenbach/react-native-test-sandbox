@@ -2,7 +2,6 @@ import { interpret } from 'xstate';
 import nock from 'nock';
 import { isEqual } from 'lodash';
 
-import { fetchMachine, defaultContext } from '../../../network/fetchMachine';
 import { Item } from '../../../types';
 import { itemBuilder } from '../../../test/mocks/item';
 import { queryMachineFactory } from '.';
@@ -28,12 +27,10 @@ const getTestQueryService = () => {
         );
       },
       staleTime: STALE_TIME_IN_MINUTES,
-      emitHandler: {
-        emitInitialized: () => {},
-        emitLoading: () => {},
-        emitSuccess: () => {},
-        emitError: () => {},
-        emitReset: () => {},
+      eventPrefix: 'TEST',
+      eventBusConfig: {
+        id: 'TEST_EVENT_BUS',
+        src: () => () => {},
       },
     }),
   );
