@@ -1,12 +1,12 @@
 import { useInterpret, useSelector } from '@xstate/react';
-import {
-  playerListEvents,
-  playerListSubscription,
-  Events,
-} from '../../../../../../store/players/playerList';
 import { createMachine, createSchema } from 'xstate';
 
 import { useStoreContext } from '../../../../../../store/store.provider';
+import {
+  Events,
+  playerListQueryManager,
+} from '../../../../../../store/players/playerList';
+import { Item } from '../../../../../../types';
 
 export const machineConfig = {
   tsTypes: {} as import('./machine.typegen').Typegen0,
@@ -14,7 +14,7 @@ export const machineConfig = {
     events: createSchema<Events>(),
     services: createSchema<{
       playerListQuery: {
-        data: any;
+        data: Item[];
       };
     }>(),
   },
@@ -46,26 +46,26 @@ export const machineConfig = {
     successNoContent: {},
     error: {},
   },
-  invoke: playerListSubscription,
+  invoke: playerListQueryManager.subscription,
   on: {
-    [playerListEvents.RESET]: 'loading',
+    [playerListQueryManager.events.RESET]: 'loading',
   },
 };
 
 export const PlayerListScreenMachine = createMachine(machineConfig);
 
 export const usePlayerListScreenMachine = () => {
-  const { playerListQuery } = useStoreContext();
+  const { playerList } = useStoreContext();
 
   const playerListScreenService = useInterpret(PlayerListScreenMachine, {
     services: {
-      playerListQuery: playerListQuery.queryAsync,
+      playerListQuery: () => playerList.methods.queryAsync(),
     },
     guards: {
       hasContent: () => {
-        const playerList = playerListQuery.getCurrentValue();
-        if (Array.isArray(playerList)) {
-          return playerList.length > 0;
+        const playerListValue = playerList.methods.getCurrentValue();
+        if (Array.isArray(playerListValue)) {
+          return playerListValue.length > 0;
         } else {
           return false;
         }

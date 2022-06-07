@@ -28,7 +28,7 @@ const getTestQueryService = () => {
       },
       staleTime: STALE_TIME_IN_MINUTES,
       eventPrefix: 'TEST',
-      eventBusConfig: {
+      eventSubscriber: {
         id: 'TEST_EVENT_BUS',
         src: () => () => {},
       },

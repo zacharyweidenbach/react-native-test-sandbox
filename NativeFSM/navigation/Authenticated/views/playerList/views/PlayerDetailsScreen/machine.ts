@@ -3,9 +3,8 @@ import { useInterpret, useSelector } from '@xstate/react';
 import { createMachine, createSchema } from 'xstate';
 
 import {
-  playerDetailEvents,
-  playerDetailSubscription,
   Events,
+  playerDetailQueryManager,
 } from '../../../../../../store/players/playerDetail';
 import { useStoreContext } from '../../../../../../store/store.provider';
 import { Item, PlayerListStack } from '../../../../../../types';
@@ -34,9 +33,9 @@ export const machineConfig = {
     success: {},
     error: {},
   },
-  invoke: playerDetailSubscription,
+  invoke: playerDetailQueryManager.subscription,
   on: {
-    [playerDetailEvents.RESET]: 'loading',
+    [playerDetailQueryManager.events.RESET]: 'loading',
   },
 };
 
@@ -46,12 +45,12 @@ export const usePlayerDetailScreenMachine = () => {
   const {
     params: { id },
   } = useRoute<RouteProp<PlayerListStack, 'PlayerDetails'>>();
-  const { playerDetailQuery } = useStoreContext();
+  const { playerDetail } = useStoreContext();
   const playerDetailScreenService = useInterpret(PlayerDetailScreenMachine, {
     context: { playerId: id },
     services: {
       playerDetailQuery: (context) =>
-        playerDetailQuery.queryAsync({ playerId: context.playerId }),
+        playerDetail.methods.queryAsync({ playerId: context.playerId }),
     },
   });
 

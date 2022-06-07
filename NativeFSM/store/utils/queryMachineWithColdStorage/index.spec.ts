@@ -18,14 +18,14 @@ const getTestQueryService = (
   mockStoreRepository: ReturnType<typeof getMockStoreRepository>,
 ) => {
   return interpret(
-    queryMachineWithColdStoreFactory<Test>({
+    queryMachineWithColdStoreFactory<Test, undefined>({
       storeRepository: mockStoreRepository,
       id: 'testQueryMachine',
       storageKey: TEST_KEY,
       query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
       staleTime: STALE_TIME_IN_MINUTES,
       eventPrefix: 'TEST',
-      eventBusConfig: {
+      eventSubscriber: {
         id: 'TEST_EVENT_BUS',
         src: () => () => {},
       },

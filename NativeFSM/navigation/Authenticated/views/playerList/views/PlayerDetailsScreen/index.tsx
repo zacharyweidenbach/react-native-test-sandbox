@@ -19,9 +19,9 @@ export const PlayerDetailsScreen = () => {
 
   return (
     <Card header={() => <Text category="h2">Player Details</Text>}>
-      <Text>{`First Name: ${playerDetail?.firstName}`}</Text>
-      <Text>{`Last Name: ${playerDetail?.lastName}`}</Text>
-      <Text>{`Team Color: ${playerDetail?.teamColor}`}</Text>
+      <Text>{`First Name: ${playerDetail.currentValue?.firstName}`}</Text>
+      <Text>{`Last Name: ${playerDetail.currentValue?.lastName}`}</Text>
+      <Text>{`Team Color: ${playerDetail.currentValue?.teamColor}`}</Text>
     </Card>
   );
 };

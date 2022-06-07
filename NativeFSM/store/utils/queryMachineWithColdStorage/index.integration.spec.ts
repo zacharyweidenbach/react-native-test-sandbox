@@ -24,14 +24,14 @@ const getTestMachines = () => {
     src: fromEventBus(() => eventBus),
   };
 
-  const testQueryMachine = queryMachineWithColdStoreFactory<Test>({
+  const testQueryMachine = queryMachineWithColdStoreFactory<Test, undefined>({
     storeRepository,
     id: 'testQueryMachine',
     storageKey: TEST_STORE_KEY,
     query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
     staleTime: TEST_STALE_TIME,
     eventPrefix: ID,
-    eventBusConfig: testEventBusConfig,
+    eventSubscriber: testEventBusConfig,
   });
 
   const UIMachine = createMachine({
@@ -102,14 +102,16 @@ describe('subscription', () => {
 
     const { testQueryMachine, UIMachine } = getTestMachines();
     const testQueryService = interpret(testQueryMachine);
-    const { initializeAsync, queryAsync } =
-      getQueryServiceMethods<Test>(testQueryService);
+    const { initializeAsync, queryAsync } = getQueryServiceMethods<
+      Test,
+      undefined
+    >(testQueryService);
 
     testQueryService.start();
     await initializeAsync();
 
     const UIServer = interpret(
-      UIMachine.withConfig({ services: { queryAsync } }),
+      UIMachine.withConfig({ services: { queryAsync: () => queryAsync() } }),
     );
 
     UIServer.onTransition((state) => {
@@ -129,13 +131,13 @@ describe('subscription', () => {
     const { testQueryMachine, UIMachine } = getTestMachines();
     const testQueryService = interpret(testQueryMachine);
     const { initializeAsync, queryAsync, reset, getCurrentValue } =
-      getQueryServiceMethods<Test>(testQueryService);
+      getQueryServiceMethods<Test, undefined>(testQueryService);
 
     testQueryService.start();
     await initializeAsync();
 
     const UIServer = interpret(
-      UIMachine.withConfig({ services: { queryAsync } }),
+      UIMachine.withConfig({ services: { queryAsync: () => queryAsync() } }),
     );
 
     let hasSucceededBefore = false;

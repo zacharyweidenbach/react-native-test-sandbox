@@ -21,7 +21,7 @@ export const PlayerListScreen = () => {
 
   return (
     <List
-      data={playerList}
+      data={playerList.currentValue}
       renderItem={({ item }) => (
         <ListItem
           title={`${item.firstName} ${item.lastName}`}

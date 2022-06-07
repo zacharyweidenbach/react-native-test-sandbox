@@ -15,7 +15,7 @@ export type Config = {
   query: any;
   staleTime: number;
   eventPrefix: string;
-  eventBusConfig: {
+  eventSubscriber: {
     id: string;
     src: any;
   };
@@ -33,7 +33,7 @@ export const queryMachineWithColdStoreFactory = <ResultType, Arguments>(
         updatedAt: null as number | null,
         result: null as ResultType | null,
       },
-      invoke: config.eventBusConfig,
+      invoke: config.eventSubscriber,
       states: {
         inactive: {
           on: {
@@ -171,23 +171,23 @@ export const queryMachineWithColdStoreFactory = <ResultType, Arguments>(
         }),
         notifyInitialized: send(
           { type: `${config.eventPrefix}.INITIALIZED` },
-          { to: config.eventBusConfig.id },
+          { to: config.eventSubscriber.id },
         ),
         notifyLoading: send(
           { type: `${config.eventPrefix}.LOADING` },
-          { to: config.eventBusConfig.id },
+          { to: config.eventSubscriber.id },
         ),
         notifySuccess: send(
           { type: `${config.eventPrefix}.SUCCESS` },
-          { to: config.eventBusConfig.id },
+          { to: config.eventSubscriber.id },
         ),
         notifyError: send(
           { type: `${config.eventPrefix}.ERROR` },
-          { to: config.eventBusConfig.id },
+          { to: config.eventSubscriber.id },
         ),
         notifyReset: send(
           { type: `${config.eventPrefix}.RESET` },
-          { to: config.eventBusConfig.id },
+          { to: config.eventSubscriber.id },
         ),
       },
       guards: {

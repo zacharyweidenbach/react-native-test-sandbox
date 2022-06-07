@@ -3,18 +3,20 @@ import nock from 'nock';
 
 import { itemBuilder } from '../../../../../../test/mocks/item';
 import { PlayerListScreenMachine } from './machine';
-import { playerListQueryMachine } from '../../../../../../store/players/playerList';
+import { playerListQueryManager } from '../../../../../../store/players/playerList';
 import { getQueryServiceMethods } from '../../../../../../store/utils/getQueryServiceMethods';
 
 const testSetup = async () => {
-  const playerListService = interpret(playerListQueryMachine).start();
+  const playerListService = interpret(
+    playerListQueryManager.queryMachine,
+  ).start();
   const playerListQuery = getQueryServiceMethods(playerListService);
   await playerListQuery.initializeAsync();
 
   const playerListScreenService = interpret(
     PlayerListScreenMachine.withConfig({
       services: {
-        playerListQuery: playerListQuery.queryAsync,
+        playerListQuery: () => playerListQuery.queryAsync(),
       },
       guards: {
         hasContent: () => {

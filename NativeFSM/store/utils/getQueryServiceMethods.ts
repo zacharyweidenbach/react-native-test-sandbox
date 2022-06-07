@@ -8,7 +8,7 @@ import {
 export type QueryMethods<T, A> = {
   initializeAsync: () => Promise<void>;
   resetAsync: () => Promise<void>;
-  queryAsync: (args: A) => Promise<T>;
+  queryAsync: (args?: A) => Promise<T>;
   forceQueryAsync: (args: A) => Promise<T>;
   initialize: () => void;
   reset: () => void;

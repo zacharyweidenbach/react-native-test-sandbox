@@ -3,12 +3,14 @@ import nock from 'nock';
 
 import { itemBuilder } from '../../../../../../test/mocks/item';
 import { PlayerDetailScreenMachine } from './machine';
-import { playerDetailQueryMachine } from '../../../../../../store/players/playerDetail';
+import { playerDetailQueryManager } from '../../../../../../store/players/playerDetail';
 import { getQueryServiceMethods } from '../../../../../../store/utils/getQueryServiceMethods';
 import { Item } from '../../../../../../types';
 
 const testSetup = async (item: Item) => {
-  const playerDetailService = interpret(playerDetailQueryMachine).start();
+  const playerDetailService = interpret(
+    playerDetailQueryManager.queryMachine,
+  ).start();
   const playerDetailQuery = getQueryServiceMethods(playerDetailService);
   await playerDetailQuery.initializeAsync();
 
