@@ -1,28 +1,30 @@
 import { InterpreterFrom } from 'xstate';
 
 import {
-  Options,
+  Config,
   queryMachineWithColdStoreFactory,
 } from './queryMachineWithColdStorage';
 
-export type QueryMethods<T> = {
+export type QueryMethods<T, A> = {
   initializeAsync: () => Promise<void>;
   resetAsync: () => Promise<void>;
-  queryAsync: () => Promise<T>;
-  forceQueryAsync: () => Promise<T>;
+  queryAsync: (args?: A) => Promise<T>;
+  forceQueryAsync: (args: A) => Promise<T>;
   initialize: () => void;
   reset: () => void;
-  query: () => void;
-  forceQuery: () => void;
+  query: (args: A) => void;
+  forceQuery: (args: A) => void;
   getCurrentValue: () => T | null;
 };
 
-class QueryServiceHelper<T> {
-  Return = queryMachineWithColdStoreFactory<T>({} as Options);
+class QueryServiceHelper<T, A> {
+  Return = queryMachineWithColdStoreFactory<T, A>({} as Config);
 }
-type QueryService<T> = InterpreterFrom<QueryServiceHelper<T>['Return']>;
+type QueryService<T, A> = InterpreterFrom<QueryServiceHelper<T, A>['Return']>;
 
-export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
+export const getQueryServiceMethods = <T, A>(
+  queryService: QueryService<T, A>,
+) => {
   const initializeAsync = () => {
     queryService.send('INITIALIZE');
     return new Promise<void>((resolve) => {
@@ -45,8 +47,8 @@ export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
     });
   };
 
-  const queryAsync = () => {
-    queryService.send('QUERY');
+  const queryAsync = (args?: A) => {
+    queryService.send('QUERY', args);
     return new Promise<T>((resolve, reject) => {
       queryService.onTransition((state) => {
         if (state.matches('success') && queryService.state.context.result) {
@@ -58,8 +60,8 @@ export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
     });
   };
 
-  const forceQueryAsync = () => {
-    queryService.send('FORCE_QUERY');
+  const forceQueryAsync = (args?: A) => {
+    queryService.send('FORCE_QUERY', args);
     return new Promise<T>((resolve, reject) => {
       queryService.onTransition((state) => {
         if (state.matches('success') && queryService.state.context.result) {
@@ -78,14 +80,16 @@ export const getQueryServiceMethods = <T>(queryService: QueryService<T>) => {
     forceQueryAsync,
     initialize: () => queryService.send('INITIALIZE'),
     reset: () => queryService.send('RESET'),
-    query: () => queryService.send('QUERY'),
-    forceQuery: () => queryService.send('FORCE_QUERY'),
+    query: (args?: A) => queryService.send('QUERY', args),
+    forceQuery: (args?: A) => queryService.send('FORCE_QUERY', args),
     getCurrentValue: () => queryService.state.context.result as T,
   };
 };
 
-class GetQueryServiceMethodsHelper<T> {
-  Return = getQueryServiceMethods<T>({} as QueryService<T>);
+class GetQueryServiceMethodsHelper<T, A> {
+  Return = getQueryServiceMethods<T, A>({} as QueryService<T, A>);
 }
-export type GetQueryServiceMethods<T> =
-  GetQueryServiceMethodsHelper<T>['Return'];
+export type GetQueryServiceMethods<T, A> = GetQueryServiceMethodsHelper<
+  T,
+  A
+>['Return'];

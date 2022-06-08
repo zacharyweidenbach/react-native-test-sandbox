@@ -1,34 +1,39 @@
 import { interpret } from 'xstate';
 
 import { getQueryServiceMethods } from '../../store/utils/getQueryServiceMethods';
-import { authQueryMachine } from '../../store/auth';
-import { playerListQueryMachine } from '../../store/players/playerList';
+import store from '../../store';
 
 export const getTestStoreHandler = () => {
-  const authQueryService = interpret(authQueryMachine);
-  const playerListQueryService = interpret(playerListQueryMachine);
+  const serviceMap = Object.keys(store).reduce((acc, key) => {
+    const queryManager = store[key as keyof typeof store];
+    acc[key as keyof typeof store] = interpret(
+      queryManager.queryMachine as any,
+    );
+    return acc;
+  }, {} as { [key in keyof typeof store]: any });
 
-  const authQueryMethods = getQueryServiceMethods(authQueryService);
-  const playerListQueryMethods = getQueryServiceMethods(playerListQueryService);
+  const serviceList = Object.keys(serviceMap).map(
+    (key) => serviceMap[key as keyof typeof serviceMap],
+  );
+  const queryMethodsList = serviceList.map((service) =>
+    getQueryServiceMethods(service as any),
+  );
 
   return {
     startAndInitializeAllStores: async () => {
-      authQueryService.start();
-      playerListQueryService.start();
-      await authQueryMethods.initializeAsync();
-      await playerListQueryMethods.initializeAsync();
+      for (const service of serviceList) {
+        service.start();
+      }
+
+      for (const queryMethods of queryMethodsList) {
+        await queryMethods.initializeAsync();
+      }
     },
     stopAllStores: () => {
-      authQueryService.stop();
-      playerListQueryService.stop();
+      for (const service of serviceList) {
+        service.stop();
+      }
     },
-    authQuery: {
-      service: authQueryService,
-      ...authQueryMethods,
-    },
-    playerListQuery: {
-      service: playerListQueryService,
-      ...playerListQueryMethods,
-    },
+    serviceMap,
   } as const;
 };

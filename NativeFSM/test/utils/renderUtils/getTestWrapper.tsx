@@ -7,13 +7,16 @@ import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 
 import { getTestStoreProvider } from './getTestStoreProvider';
+import { getTestStoreHandler } from '../getTestStoreHandler';
 
-type TestWrapperOptions = {};
+type TestWrapperOptions = {
+  testStoreHandler?: ReturnType<typeof getTestStoreHandler>;
+};
 
 export const getTestWrapper = async <TProps,>(
-  _options: TestWrapperOptions,
+  options: TestWrapperOptions,
 ): Promise<React.FunctionComponent<TProps>> => {
-  const TestStoreProvider = await getTestStoreProvider();
+  const TestStoreProvider = await getTestStoreProvider(options);
 
   return ({ children }) => (
     <>

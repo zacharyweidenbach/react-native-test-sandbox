@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine, send } from 'xstate';
 
 import { StoreRepository } from '../StoreRepository/getStoreRepository';
 import { addMinutes, isPast } from 'date-fns';
@@ -8,33 +8,32 @@ export type ColdStorage<T> = {
   updatedAt: number;
 };
 
-export type Options = {
+export type Config = {
   storeRepository: StoreRepository;
   id: string;
   storageKey: string;
   query: any;
   staleTime: number;
-  emitHandler: {
-    emitInitialized: () => void;
-    emitLoading: () => void;
-    emitSuccess: () => void;
-    emitError: () => void;
-    emitReset: () => void;
+  eventPrefix: string;
+  eventSubscriber: {
+    id: string;
+    src: any;
   };
 };
 
-export const queryMachineWithColdStoreFactory = <ResultType>(
-  options: Options,
+export const queryMachineWithColdStoreFactory = <ResultType, Arguments>(
+  config: Config,
 ) =>
   createMachine(
     {
-      id: options.id,
+      id: config.id,
       initial: 'inactive',
       context: {
         error: null as Error | null,
         updatedAt: null as number | null,
         result: null as ResultType | null,
       },
+      invoke: config.eventSubscriber,
       states: {
         inactive: {
           on: {
@@ -89,7 +88,7 @@ export const queryMachineWithColdStoreFactory = <ResultType>(
         querying: {
           entry: 'notifyLoading',
           invoke: {
-            src: options.query,
+            src: config.query,
             onDone: {
               target: 'updatingStorage',
               actions: ['storeResult', 'clearError'],
@@ -136,11 +135,11 @@ export const queryMachineWithColdStoreFactory = <ResultType>(
     {
       services: {
         rehydrateFromStorage: async () =>
-          options.storeRepository.get(options.storageKey),
+          config.storeRepository.get(config.storageKey),
         clearStorage: async () =>
-          options.storeRepository.remove(options.storageKey),
+          config.storeRepository.remove(config.storageKey),
         updateStorage: async (context) =>
-          options.storeRepository.set(options.storageKey, {
+          config.storeRepository.set(config.storageKey, {
             data: context.result,
             updatedAt: context.updatedAt,
           }),
@@ -170,16 +169,31 @@ export const queryMachineWithColdStoreFactory = <ResultType>(
         clearError: assign({
           error: (_context, _event) => null,
         }),
-        notifyInitialized: () => options.emitHandler.emitInitialized(),
-        notifyLoading: () => options.emitHandler.emitLoading(),
-        notifySuccess: () => options.emitHandler.emitSuccess(),
-        notifyError: () => options.emitHandler.emitError(),
-        notifyReset: () => options.emitHandler.emitReset(),
+        notifyInitialized: send(
+          { type: `${config.eventPrefix}.INITIALIZED` },
+          { to: config.eventSubscriber.id },
+        ),
+        notifyLoading: send(
+          { type: `${config.eventPrefix}.LOADING` },
+          { to: config.eventSubscriber.id },
+        ),
+        notifySuccess: send(
+          { type: `${config.eventPrefix}.SUCCESS` },
+          { to: config.eventSubscriber.id },
+        ),
+        notifyError: send(
+          { type: `${config.eventPrefix}.ERROR` },
+          { to: config.eventSubscriber.id },
+        ),
+        notifyReset: send(
+          { type: `${config.eventPrefix}.RESET` },
+          { to: config.eventSubscriber.id },
+        ),
       },
       guards: {
         hasStaleResult: (context) => {
           if (context.updatedAt) {
-            return isPast(addMinutes(context.updatedAt, options.staleTime));
+            return isPast(addMinutes(context.updatedAt, config.staleTime));
           } else {
             return false;
           }

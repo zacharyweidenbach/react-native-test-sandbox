@@ -1,10 +1,8 @@
 import React, { FC, createContext, useContext } from 'react';
-import { useInterpret, useSelector } from '@xstate/react';
 
-import { primaryMachine } from './primaryMachine';
-import { useStoreContext } from '../store/store.provider';
+import { usePrimaryMachine } from './primaryMachine';
 
-const PrimaryMachineContext = createContext<{
+type PrimaryMachineContextType = {
   isBootstrapping: boolean;
   isLoggingIn: boolean;
   isLoggingOut: boolean;
@@ -12,43 +10,26 @@ const PrimaryMachineContext = createContext<{
   isUnauthenticated: boolean;
   handleLogin: () => void;
   handleLogout: () => void;
-}>({} as any);
+};
+
+const PrimaryMachineContext = createContext<PrimaryMachineContextType>(
+  {} as PrimaryMachineContextType,
+);
+
+export const usePrimaryMachineContext = () => {
+  return useContext(PrimaryMachineContext);
+};
 
 export const PrimaryMachineProvider: FC = ({ children }) => {
-  const { authQuery, playerListQuery } = useStoreContext();
-  const primaryService = useInterpret(primaryMachine, {
-    services: {
-      bootstrap: async () => {
-        await authQuery.initializeAsync();
-        await playerListQuery.initializeAsync();
-      },
-      login: async () => Promise.resolve(null),
-      logout: async () => {
-        await authQuery.resetAsync();
-        await playerListQuery.resetAsync();
-      },
-    },
-    guards: {
-      isAuthenticated: () => Boolean(authQuery.getCurrentValue()),
-      // isAuthenticated: () => true,
-    },
-  });
-
-  const isBootstrapping = useSelector(primaryService, (state) =>
-    state.matches('bootstrapping'),
-  );
-  const isLoggingIn = useSelector(primaryService, (state) =>
-    state.matches('loggingIn'),
-  );
-  const isLoggingOut = useSelector(primaryService, (state) =>
-    state.matches('loggingOut'),
-  );
-  const isAuthenticated = useSelector(primaryService, (state) =>
-    state.matches('authenticated'),
-  );
-  const isUnauthenticated = useSelector(primaryService, (state) =>
-    state.matches('unauthenticated'),
-  );
+  const {
+    isBootstrapping,
+    isLoggingIn,
+    isLoggingOut,
+    isAuthenticated,
+    isUnauthenticated,
+    handleLogin,
+    handleLogout,
+  } = usePrimaryMachine();
 
   return (
     <PrimaryMachineContext.Provider
@@ -58,15 +39,11 @@ export const PrimaryMachineProvider: FC = ({ children }) => {
         isLoggingOut,
         isAuthenticated,
         isUnauthenticated,
-        handleLogin: () => primaryService.send('LOGIN'),
-        handleLogout: () => primaryService.send('LOGOUT'),
+        handleLogin,
+        handleLogout,
       }}
     >
       {children}
     </PrimaryMachineContext.Provider>
   );
-};
-
-export const usePrimaryMachineContext = () => {
-  return useContext(PrimaryMachineContext);
 };

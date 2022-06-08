@@ -1,9 +1,10 @@
 import '@testing-library/jest-native/extend-expect';
-import { assign, createMachine } from 'xstate';
+import { createMachine } from 'xstate';
 import { createModel } from '@xstate/test';
 import { cleanup, RenderAPI } from '@testing-library/react-native';
 import nock from 'nock';
 
+import { getTestStoreHandler } from '../../../../../../test/utils/getTestStoreHandler';
 import { wrappedRender } from '../../../../../../test/utils/wrappedRender';
 import { mergeMetaTests } from '../../../../../../test/utils/mergeMetaTests';
 import { itemBuilder } from '../../../../../../test/mocks/item';
@@ -16,8 +17,8 @@ type TestCbArgs = {
   mockData: Item;
 };
 
-describe.skip('PlayerDetailsScreen', () => {
-  const fetchMachine = createMachine(
+describe('PlayerDetailScreen', () => {
+  const PlayerDetailScreenMachine = createMachine(
     mergeMetaTests(machineConfig, {
       idle: async ({ renderApi }: TestCbArgs) => {
         const { getByA11yLabel } = renderApi;
@@ -42,51 +43,45 @@ describe.skip('PlayerDetailsScreen', () => {
   );
 
   const item = itemBuilder();
-  const fetchModel = createModel(
-    fetchMachine.withConfig({
-      actions: {
-        storeResult: assign({ result: (_context, event) => event.result }),
-      },
-    }),
+  const PlayerDetailScreenModel = createModel(
+    PlayerDetailScreenMachine.withContext({ playerId: item.id }),
   ).withEvents({
-    FETCH: { exec: () => {} },
-    'done.invoke.PlayerDetailsScreen.loading:invocation[0]': {
+    'done.invoke.PlayerDetailScreen.loading:invocation[0]': {
       exec: () => {},
-      cases: [{ result: item }],
     },
-    'error.platform.PlayerDetailsScreen.loading:invocation[0]': {
+    'error.platform.PlayerDetailScreen.loading:invocation[0]': {
       exec: () => {},
     },
   });
 
-  const testPlans = fetchModel.getShortestPathPlans();
+  const testPlans = PlayerDetailScreenModel.getShortestPathPlans();
+  const testStoreHandler = getTestStoreHandler();
 
   testPlans.forEach((plan) => {
     describe(plan.description, () => {
       beforeEach(() => {
-        switch (plan.state.value) {
-          case 'success':
-            nock('http://localhost:9000')
-              .get(`/items/${item.id}`)
-              .reply(200, item);
-            break;
-          case 'error':
-            nock('http://localhost:9000')
-              .get(`/items/${item.id}`)
-              .reply(500, { error: { message: 'Something went wrong' } });
-            break;
+        if (plan.state.matches('success')) {
+          nock('http://localhost:9000')
+            .get(`/items/${item.id}`)
+            .reply(200, item);
+        } else if (plan.state.matches('error')) {
+          nock('http://localhost:9000')
+            .get(`/items/${item.id}`)
+            .reply(500, { error: { message: 'Something went wrong' } });
         }
       });
 
       afterEach(async () => {
         nock.cleanAll();
         cleanup();
+        testStoreHandler.stopAllStores();
       });
 
       plan.paths.forEach((path) => {
         it(path.description, async () => {
-          const renderApi = wrappedRender(PlayerDetailsScreen, {
+          const renderApi = await wrappedRender(PlayerDetailsScreen, {
             initialParams: { id: item.id },
+            testStoreHandler,
           });
           await path.test({ renderApi, mockData: item });
         });
@@ -95,6 +90,6 @@ describe.skip('PlayerDetailsScreen', () => {
   });
 
   it('should have full coverage', () => {
-    return fetchModel.testCoverage();
+    return PlayerDetailScreenModel.testCoverage();
   });
 });

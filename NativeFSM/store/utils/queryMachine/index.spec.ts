@@ -2,10 +2,13 @@ import { interpret } from 'xstate';
 import nock from 'nock';
 import { isEqual } from 'lodash';
 
-import { fetchMachine, defaultContext } from '../../../network/fetchMachine';
 import { Item } from '../../../types';
 import { itemBuilder } from '../../../test/mocks/item';
 import { queryMachineFactory } from '.';
+import {
+  fetchPromiseFromFetchService,
+  getAuthedFetchService,
+} from '../../../network/utils';
 
 type Test = Item[];
 
@@ -15,14 +18,19 @@ const getTestQueryService = () => {
   return interpret(
     queryMachineFactory<Test>({
       id: 'testQueryMachine',
-      query: fetchMachine.withContext({ ...defaultContext, path: 'items' }),
+      query: () => {
+        return fetchPromiseFromFetchService(
+          getAuthedFetchService({
+            path: 'items',
+            method: 'GET',
+          }),
+        );
+      },
       staleTime: STALE_TIME_IN_MINUTES,
-      emitHandler: {
-        emitInitialized: () => {},
-        emitLoading: () => {},
-        emitSuccess: () => {},
-        emitError: () => {},
-        emitReset: () => {},
+      eventPrefix: 'TEST',
+      eventSubscriber: {
+        id: 'TEST_EVENT_BUS',
+        src: () => () => {},
       },
     }),
   );
@@ -44,7 +52,7 @@ describe('queryMachine', () => {
     testQueryService.send('INITIALIZE');
   });
 
-  it('should fetch data and put in storage', (done) => {
+  it('should fetch data and cache it', (done) => {
     const item = itemBuilder();
     nock('http://localhost:9000').get('/items').reply(200, [item]);
     const testQueryService = getTestQueryService();
@@ -75,9 +83,7 @@ describe('queryMachine', () => {
       }
 
       if (state.matches('error')) {
-        expect(state.context.error).toEqual({
-          error: new Error('Something went wrong'),
-        });
+        expect(state.context.error).toEqual(new Error('Something went wrong'));
         done();
       }
     });

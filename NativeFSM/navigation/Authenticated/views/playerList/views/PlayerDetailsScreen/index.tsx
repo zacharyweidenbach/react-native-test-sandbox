@@ -1,29 +1,13 @@
 import React from 'react';
 import { Text, Card } from '@ui-kitten/components';
-import { RouteProp, useRoute } from '@react-navigation/native';
-import { useMachine } from '@xstate/react';
 
 import { LoadingIndicator } from '../../../../../../components/LoadingIndicator';
-import { PlayerListStack } from '../../../../../../types';
-import { PlayerDetailsScreenMachine } from './machine';
+import { usePlayerDetailScreenMachine } from './machine';
+import { useStoreContext } from '../../../../../../store/store.provider';
 
 export const PlayerDetailsScreen = () => {
-  const {
-    params: { id },
-  } = useRoute<RouteProp<PlayerListStack, 'PlayerDetails'>>();
-
-  const [state, send] = useMachine(PlayerDetailsScreenMachine);
-
-  const isIdle = state.matches('idle');
-  const isLoading = state.matches('idle') || state.matches('loading');
-  const isError = state.matches('error');
-  const data = state.context.result;
-
-  React.useEffect(() => {
-    if (isIdle) {
-      send('FETCH', { id });
-    }
-  }, [send, isIdle]);
+  const { isLoading, isError } = usePlayerDetailScreenMachine();
+  const { playerDetail } = useStoreContext();
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -35,9 +19,9 @@ export const PlayerDetailsScreen = () => {
 
   return (
     <Card header={() => <Text category="h2">Player Details</Text>}>
-      <Text>{`First Name: ${data?.firstName}`}</Text>
-      <Text>{`Last Name: ${data?.lastName}`}</Text>
-      <Text>{`Team Color: ${data?.teamColor}`}</Text>
+      <Text>{`First Name: ${playerDetail.currentValue?.firstName}`}</Text>
+      <Text>{`Last Name: ${playerDetail.currentValue?.lastName}`}</Text>
+      <Text>{`Team Color: ${playerDetail.currentValue?.teamColor}`}</Text>
     </Card>
   );
 };

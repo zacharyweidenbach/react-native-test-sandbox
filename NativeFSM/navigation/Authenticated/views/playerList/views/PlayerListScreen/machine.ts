@@ -1,78 +1,71 @@
 import { useInterpret, useSelector } from '@xstate/react';
-import {
-  playerListEvents,
-  playerListSubscriptionMachine,
-} from '../../../../../../store/players/playerList';
-import { createMachine } from 'xstate';
+import { createMachine, createSchema } from 'xstate';
 
 import { useStoreContext } from '../../../../../../store/store.provider';
+import {
+  Events,
+  playerListQueryManager,
+} from '../../../../../../store/players/playerList';
+import { Item } from '../../../../../../types';
 
 export const machineConfig = {
+  tsTypes: {} as import('./machine.typegen').Typegen0,
+  schema: {
+    events: createSchema<Events>(),
+    services: createSchema<{
+      playerListQuery: {
+        data: Item[];
+      };
+    }>(),
+  },
   id: 'PlayerListScreen',
-  type: 'parallel' as const,
-  initial: 'fetching',
+  initial: 'loading',
   states: {
-    local: {
-      initial: 'loading',
+    loading: {
+      initial: 'fetching',
       states: {
-        loading: {
-          initial: 'fetching',
-          states: {
-            fetching: {
-              invoke: {
-                src: 'playerListQuery',
-                onDone: 'evaluateResult',
-                onError: '#PlayerListScreen.local.error',
-              },
-            },
-            evaluateResult: {
-              always: [
-                {
-                  target: '#PlayerListScreen.local.successWithContent',
-                  cond: 'hasContent',
-                },
-                { target: '#PlayerListScreen.local.successNoContent' },
-              ],
-            },
+        fetching: {
+          invoke: {
+            src: 'playerListQuery',
+            onDone: 'evaluateResult',
+            onError: '#PlayerListScreen.error',
           },
         },
-        successWithContent: { type: 'final' as const },
-        successNoContent: { type: 'final' as const },
-        error: { type: 'final' as const },
+        evaluateResult: {
+          always: [
+            {
+              target: '#PlayerListScreen.successWithContent',
+              cond: 'hasContent',
+            },
+            { target: '#PlayerListScreen.successNoContent' },
+          ],
+        },
       },
     },
-    playerListSubscriber: { invoke: playerListSubscriptionMachine },
+    successWithContent: {},
+    successNoContent: {},
+    error: {},
   },
-  on: { [playerListEvents.RESET]: 'local.loading' },
+  invoke: playerListQueryManager.subscription,
+  on: {
+    [playerListQueryManager.events.RESET]: 'loading',
+  },
 };
 
-export const PlayerListScreenMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QAUA2BDAnmATgGQEtYAXAZQGMcwwA7AOlQHtz1UHH0ICao6AzMMXIALblADEERjTB1uAN0YBrWWiy5CJClVrsWbJpzH9BIsQgXN0xAtIDaABgC6iUAAdGsAjemuQAD0QAJgBmABY6AHYggA4YyJCARgA2MOSATkTEoIAaEExERLCYugd0hwcAVgro4vCYgF8GvLVsfCIySmp6Jn12Ix4TIVEecVwcRhw6NwxiPkmAWzpWjQ7tbr1Wfq5BgWHzSxYfGkcXJBAPL2O-QIQghzoYysTK4uSMkISwyLyCu++oiEgpUQg4wrEYplEk0Whg2ppOjoelYDBwdrwwPJWABXaxgABKcGxqGI4j8l28thoN2CIXSpRiYLSkUhQMqlV+iCB9NCMSCCUq-KCYQc0JhIBojAgcD8K3aWi6ul6W0M6KGZh45M8lN851uDk5CCyyVK5QcdOFTyK8XFcoR6yVKO2xkxOLxhNgxOIWquVJp-xCdBFT1BkPikUiYXShuFiTooWBWRZkWSWTitrhqwVSM2qIGUB9OupesQAFphYawoGyhUQuzKskWeD0mEM+p5YiNsq2J7yOQ4LAAOreYQAYWkxFo3vOFOuJYQYUqJTB6QbUcjiTDhqBQUBfNecUq6WSDkazRAdrWiuRfV7-dgsAAcoxxzRJ2-C3PQLc0oGUzFQTrYo4mPSsghNBI+UidJQnSSEHCCNt4SvHNuzocZJk-P151TOhMhFOlVwqZJXjCMJt2SEpQkSQiQk+IIgjgyokKzTtHX0LDdW-MtikNct6XKdJjxiGiozSflkhYjsHXoGZ23tbEACNYEoAhFNwTji24hBS14-JEEFCIyPuWIhLSU9JPPS9s26TT-VLaI+MSBC8LKdJIk3cDG0o1smgaIA */
-  createMachine({
-    tsTypes: {} as import('./machine.typegen').Typegen0,
-    schema: {
-      events: {} as { type: 'always' },
-      services: {} as {
-        playerListQuery: {
-          data: any;
-        };
-      },
-    },
-    ...machineConfig,
-  });
+export const PlayerListScreenMachine = createMachine(machineConfig);
 
 export const usePlayerListScreenMachine = () => {
-  const { playerListQuery } = useStoreContext();
+  const { playerList } = useStoreContext();
 
   const playerListScreenService = useInterpret(PlayerListScreenMachine, {
     services: {
-      playerListQuery: playerListQuery.queryAsync,
+      playerListQuery: () => playerList.methods.queryAsync(),
     },
     guards: {
       hasContent: () => {
-        const playerList = playerListQuery.getCurrentValue();
-        if (Array.isArray(playerList)) {
-          return playerList.length > 0;
+        const playerListValue = playerList.methods.getCurrentValue();
+        if (Array.isArray(playerListValue)) {
+          return playerListValue.length > 0;
         } else {
           return false;
         }
@@ -81,10 +74,10 @@ export const usePlayerListScreenMachine = () => {
   });
 
   const isLoading = useSelector(playerListScreenService, (state) =>
-    state.matches('local.loading'),
+    state.matches('loading'),
   );
   const isError = useSelector(playerListScreenService, (state) =>
-    state.matches('local.error'),
+    state.matches('error'),
   );
 
   return { isLoading, isError };
